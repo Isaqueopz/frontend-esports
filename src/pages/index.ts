@@ -1,5 +1,0 @@
-export { HomePage } from './HomePage'
-export { RankingPage } from './RankingPage'
-export { BracketPage } from './BracketPage'
-export { ResultsPage } from './ResultsPage'
-export { TeamProfilePage } from './TeamProfilePage'

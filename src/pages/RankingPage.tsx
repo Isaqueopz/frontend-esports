@@ -317,22 +317,13 @@ export function RankingPage() {
       </div>
 
       {/* Legend */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-        <div className="esports-card">
+      <div className="flex justify-center">
+        <div className="esports-card max-w-sm text-center">
           <h3 className="font-medium text-white mb-3">Legenda</h3>
           <div className="space-y-2 text-gray-400">
             <div><strong className="text-white">Pts:</strong> Pontos (3 por vitória)</div>
             <div><strong className="text-white">V:</strong> Vitórias</div>
             <div><strong className="text-white">D:</strong> Derrotas</div>
-          </div>
-        </div>
-        
-        <div className="esports-card">
-          <h3 className="font-medium text-white mb-3">Critérios de Desempate</h3>
-          <div className="space-y-2 text-gray-400">
-            <div>1. Saldo de gols (SG)</div>
-            <div>2. Gols marcados (GP)</div>
-            <div>3. Confronto direto</div>
           </div>
         </div>
       </div>
