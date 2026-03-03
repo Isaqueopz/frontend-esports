@@ -4,17 +4,16 @@ import type { Championship, Match } from '../types'
 import { ChampionshipType, MatchStatus } from '../types'
 import { MatchCard } from '../components/MatchCard'
 import { formatDate } from '../utils/dateUtils.js'
+import bgCsImage from '../assets/bg-cs.jpg'
 import {
   Trophy,
   Users,
   Calendar,
-  MapPin,
   Eye,
   ArrowRight,
   Zap,
   Target,
   Clock,
-  Play,
   Award,
   TrendingUp,
   Gamepad2,
@@ -34,7 +33,10 @@ export function HomePage() {
     try {
       setLoading(true)
       
-      // Mock data - Em produção, isso virá da API
+      // ⚠️ SPRING BOOT INTEGRATION POINT
+      // Substituir por: 
+      // const response = await fetch('/api/championships/active')
+      // const championships = await response.json()
       const mockChampionships: Championship[] = [
         {
           id: '1',
@@ -62,6 +64,10 @@ export function HomePage() {
         }
       ]
 
+      // ⚠️ SPRING BOOT INTEGRATION POINT
+      // Substituir por: 
+      // const matchesResponse = await fetch('/api/matches/upcoming')
+      // const upcomingMatches = await matchesResponse.json()
       const mockUpcomingMatches: Match[] = [
         {
           id: '1',
@@ -168,24 +174,25 @@ export function HomePage() {
   return (
     <div className="space-y-12">
       {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary-900/20 via-dark-800 to-dark-900 rounded-2xl"></div>
+      <section className="relative overflow-hidden rounded-2xl">
+        {/* Background Image */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat" 
+          style={{ backgroundImage: `url(${bgCsImage})` }}
+        ></div>
         
-        <div className="relative text-center py-16 px-8">
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-900/80 via-dark-800/90 to-dark-900/80"></div>
+        
+        <div className="relative text-center py-16 px-8 z-10">
           {/* Animated logo */}
           <div className="flex justify-center mb-8">
             <div className="relative group">
-              <div className="w-24 h-24 bg-gradient-to-r from-primary-500 to-primary-600 rounded-2xl flex items-center justify-center transform group-hover:scale-110 transition-all duration-500 rotate-3 hover:rotate-0">
-                <Zap className="w-12 h-12 text-white animate-pulse" />
-              </div>
               <div className="absolute inset-0 bg-gradient-to-r from-primary-500 to-primary-600 rounded-2xl opacity-30 blur-xl group-hover:blur-2xl transition-all duration-500"></div>
-              <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                <Sparkles className="w-3 h-3 text-white animate-pulse" />
-              </div>
             </div>
           </div>
 
-          <h1 className="gaming-title text-4xl md:text-7xl mb-6 bg-gradient-to-r from-white via-primary-200 to-primary-400 bg-clip-text text-transparent animate-pulse">
+          <h1 className="gaming-title text-4xl md:text-7xl mb-12 bg-gradient-to-r from-white via-primary-200 to-primary-400 bg-clip-text text-transparent animate-pulse">
             Liga dos Campeões
           </h1>
           
@@ -194,7 +201,7 @@ export function HomePage() {
               Sistema de gestão e agendamento automático de campeonatos de e-sports
             </p>
             <p className="text-primary-400 font-medium flex items-center justify-center space-x-2">
-              <Gamepad2 className="w-5 h-5 animate-bounce" />
+              <Gamepad2 className="w-5 h-5 " />
               <span>Experiência competitiva de alta qualidade</span>
               <Target className="w-5 h-5 animate-pulse" />
             </p>

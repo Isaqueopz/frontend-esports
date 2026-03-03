@@ -22,7 +22,10 @@ export function RankingPage() {
     try {
       setLoading(true)
       
-      // Mock data - Em produção, virá da API Spring Boot
+      // ⚠️ SPRING BOOT INTEGRATION POINT
+      // Substituir por: 
+      // const response = await fetch('/api/championships?type=PONTOS_CORRIDOS&active=true')
+      // const championships = await response.json()
       const mockChampionships: Championship[] = [
         {
           id: '1',
@@ -65,7 +68,10 @@ export function RankingPage() {
 
   const loadRanking = async (championshipId: string) => {
     try {
-      // Mock data - Em produção, consumirá endpoint /api/rankings/{championshipId}
+      // ⚠️ SPRING BOOT INTEGRATION POINT
+      // Substituir por: 
+      // const response = await fetch(`/api/championships/${championshipId}/rankings`)
+      // const rankings = await response.json()
       console.log('Loading ranking for championship:', championshipId)
       const mockRankings: Ranking[] = [
         {
@@ -191,7 +197,7 @@ export function RankingPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-white mb-2">
-            🏆 Ranking dos Times
+            Ranking dos Times
           </h1>
           <p className="text-gray-400">
             Classificação dinâmica para campeonatos de Pontos Corridos

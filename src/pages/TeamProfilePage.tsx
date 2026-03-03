@@ -4,6 +4,16 @@ import type { Team, Match } from '../types'
 import { MatchStatus } from '../types'
 import { MatchCard } from '../components/MatchCard'
 import { formatDate } from '../utils/dateUtils.js'
+import {
+  Users,
+  Trophy,
+  Calendar,
+  Award,
+  Crown,
+  Star,
+  Medal,
+  BarChart3
+} from 'lucide-react'
 
 export function TeamProfilePage() {
   const { teamId } = useParams<{ teamId: string }>()
@@ -22,7 +32,10 @@ export function TeamProfilePage() {
     try {
       setLoading(true)
       
-      // Mock data - Em produção, consumirá endpoint /api/teams/{id}
+      // ⚠️ SPRING BOOT INTEGRATION POINT
+      // Substituir por: 
+      // const teamResponse = await fetch(`/api/teams/${id}`)
+      // const team = await teamResponse.json()
       console.log('Loading team data for:', id)
       const mockTeam: Team = {
         id: '1',
@@ -71,6 +84,10 @@ export function TeamProfilePage() {
         createdAt: '2021-01-15T00:00:00Z'
       }
 
+      // ⚠️ SPRING BOOT INTEGRATION POINT
+      // Substituir por: 
+      // const recentResponse = await fetch(`/api/teams/${id}/matches/recent`)
+      // const recentMatches = await recentResponse.json()
       const mockRecentMatches: Match[] = [
         {
           id: '1',
@@ -126,6 +143,10 @@ export function TeamProfilePage() {
         }
       ]
 
+      // ⚠️ SPRING BOOT INTEGRATION POINT
+      // Substituir por: 
+      // const upcomingResponse = await fetch(`/api/teams/${id}/matches/upcoming`)
+      // const upcomingMatches = await upcomingResponse.json()
       const mockUpcomingMatches: Match[] = [
         {
           id: '3',
@@ -254,7 +275,9 @@ export function TeamProfilePage() {
       {/* Team Roster */}
       <div className="esports-card">
         <h2 className="text-xl font-bold text-white mb-4 flex items-center">
-          <span className="mr-2">👥</span>
+          <div className="w-8 h-8 bg-primary-500/20 rounded-lg flex items-center justify-center mr-3">
+            <Users className="w-5 h-5 text-primary-400" />
+          </div>
           Elenco Atual
         </h2>
         
@@ -332,7 +355,9 @@ export function TeamProfilePage() {
       {/* Recent Matches */}
       <div className="space-y-4">
         <h2 className="text-xl font-bold text-white flex items-center">
-          <span className="mr-2">📊</span>
+          <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center mr-3">
+            <BarChart3 className="w-5 h-5 text-blue-400" />
+          </div>
           Partidas Recentes
         </h2>
         
@@ -352,7 +377,9 @@ export function TeamProfilePage() {
       {/* Upcoming Matches */}
       <div className="space-y-4">
         <h2 className="text-xl font-bold text-white flex items-center">
-          <span className="mr-2">⏰</span>
+          <div className="w-8 h-8 bg-red-500/20 rounded-lg flex items-center justify-center mr-3">
+            <Calendar className="w-5 h-5 text-red-400" />
+          </div>
           Próximas Partidas
         </h2>
         
@@ -372,14 +399,18 @@ export function TeamProfilePage() {
       {/* Team Achievements */}
       <div className="esports-card">
         <h2 className="text-xl font-bold text-white mb-4 flex items-center">
-          <span className="mr-2">🏆</span>
+          <div className="w-8 h-8 bg-yellow-500/20 rounded-lg flex items-center justify-center mr-3">
+            <Trophy className="w-5 h-5 text-yellow-400" />
+          </div>
           Conquistas
         </h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-dark-700 rounded-lg p-4">
             <div className="flex items-center space-x-3">
-              <div className="text-3xl">🥇</div>
+              <div className="w-12 h-12 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl flex items-center justify-center">
+                <Crown className="w-7 h-7 text-white" />
+              </div>
               <div>
                 <h3 className="font-semibold text-white">Liga Principal 2023</h3>
                 <p className="text-sm text-gray-400">Campeão • Dezembro 2023</p>
@@ -389,7 +420,9 @@ export function TeamProfilePage() {
           
           <div className="bg-dark-700 rounded-lg p-4">
             <div className="flex items-center space-x-3">
-              <div className="text-3xl">🥈</div>
+              <div className="w-12 h-12 bg-gradient-to-r from-gray-400 to-gray-500 rounded-xl flex items-center justify-center">
+                <Medal className="w-7 h-7 text-white" />
+              </div>
               <div>
                 <h3 className="font-semibold text-white">Copa Elite 2023</h3>
                 <p className="text-sm text-gray-400">Vice-campeão • Novembro 2023</p>
@@ -399,7 +432,9 @@ export function TeamProfilePage() {
           
           <div className="bg-dark-700 rounded-lg p-4">
             <div className="flex items-center space-x-3">
-              <div className="text-3xl">🏅</div>
+              <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
+                <Award className="w-7 h-7 text-white" />
+              </div>
               <div>
                 <h3 className="font-semibold text-white">Masters Regional</h3>
                 <p className="text-sm text-gray-400">3º lugar • Outubro 2023</p>
@@ -409,7 +444,9 @@ export function TeamProfilePage() {
           
           <div className="bg-dark-700 rounded-lg p-4">
             <div className="flex items-center space-x-3">
-              <div className="text-3xl">⭐</div>
+              <div className="w-12 h-12 bg-gradient-to-r from-primary-500 to-primary-600 rounded-xl flex items-center justify-center">
+                <Star className="w-7 h-7 text-white" />
+              </div>
               <div>
                 <h3 className="font-semibold text-white">Melhor Time BR</h3>
                 <p className="text-sm text-gray-400">Ranking 2023 • HLTV</p>

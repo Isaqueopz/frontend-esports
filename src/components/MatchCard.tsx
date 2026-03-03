@@ -4,7 +4,6 @@ import { formatDateTime } from '../utils/dateUtils.js'
 import {
   MapPin,
   Trophy,
-  Clock,
   Eye,
   Zap,
   Swords,

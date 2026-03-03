@@ -23,7 +23,10 @@ export function BracketPage() {
     try {
       setLoading(true)
       
-      // Mock data - Em produção, virá da API Spring Boot
+      // ⚠️ SPRING BOOT INTEGRATION POINT
+      // Substituir por: 
+      // const response = await fetch('/api/championships?type=MATA_MATA')
+      // const championships = await response.json()
       const mockChampionships: Championship[] = [
         {
           id: '2',
@@ -66,7 +69,10 @@ export function BracketPage() {
 
   const loadBracket = async (championshipId: string) => {
     try {
-      // Mock data - Simulando estrutura de bracket com 8 times
+      // ⚠️ SPRING BOOT INTEGRATION POINT
+      // Substituir por: 
+      // const response = await fetch(`/api/championships/${championshipId}/bracket`)
+      // const bracket = await response.json()
       const mockMatches: Match[] = [
         // Quartas de Final
         {
@@ -357,7 +363,7 @@ export function BracketPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-white mb-2">
-            🌳 Bracket dos Torneios
+             Bracket dos Torneios
           </h1>
           <p className="text-gray-400">
             Árvore interativa para campeonatos Mata-Mata

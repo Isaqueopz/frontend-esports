@@ -33,7 +33,12 @@ export function ResultsPage() {
     try {
       setLoading(true)
       
-      // Mock data - Em produção, virá da API Spring Boot
+      // ⚠️ SPRING BOOT INTEGRATION POINT
+      // Substituir por: 
+      // const championshipsResponse = await fetch('/api/championships')
+      // const championships = await championshipsResponse.json()
+      // const teamsResponse = await fetch('/api/teams')
+      // const teams = await teamsResponse.json()
       const mockChampionships: Championship[] = [
         {
           id: '1',
@@ -83,7 +88,10 @@ export function ResultsPage() {
 
   const loadFilteredResults = async () => {
     try {
-      // Mock data - Partidas finalizadas
+      // ⚠️ SPRING BOOT INTEGRATION POINT
+      // Substituir por: 
+      // const response = await fetch(`/api/matches/completed?${queryParams}`)
+      // const matches = await response.json()
       const mockMatches: Match[] = [
         {
           id: '1',
@@ -279,7 +287,7 @@ export function ResultsPage() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-white mb-2">
-          📊 Resultados das Partidas
+           Resultados das Partidas
         </h1>
         <p className="text-gray-400">
           Histórico geral de partidas com status CONCLUÍDA
@@ -430,7 +438,6 @@ export function ResultsPage() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <h4 className="font-medium text-gray-300 mb-3">Média de Gols por Partida</h4>
               <div className="text-2xl font-bold text-primary-400">
                 {matches.length > 0 
                   ? (matches.reduce((sum, match) => sum + (match.placarCT || 0) + (match.placarTR || 0), 0) / matches.length).toFixed(1)

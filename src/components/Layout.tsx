@@ -5,8 +5,7 @@ import {
   Trophy, 
   Brackets, 
   BarChart3, 
-  Zap,
-  Gamepad2
+  Zap
 } from 'lucide-react'
 
 interface LayoutProps {
