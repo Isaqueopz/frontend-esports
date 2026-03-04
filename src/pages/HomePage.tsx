@@ -174,7 +174,7 @@ export function HomePage() {
   return (
     <div className="space-y-12">
       {/* Hero Section */}
-      <section className="relative overflow-hidden rounded-2xl">
+      <section className="relative overflow-hidden rounded-2xl min-h-[75vh]">
         {/* Background Image */}
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat" 
@@ -184,7 +184,7 @@ export function HomePage() {
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-primary-900/80 via-dark-800/90 to-dark-900/80"></div>
         
-        <div className="relative text-center py-16 px-8 z-10">
+        <div className="relative text-center py-24 md:py-28 px-8 z-10 min-h-[75vh] flex flex-col justify-center">
           {/* Animated logo */}
           <div className="flex justify-center mb-8">
             <div className="relative group">
@@ -228,7 +228,7 @@ export function HomePage() {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-20 max-w-4xl mx-auto">
             <div className="bg-dark-800/60 backdrop-blur-sm border border-dark-700/50 rounded-xl p-6 hover:bg-dark-700/60 transition-all duration-300 hover:scale-105">
               <div className="flex items-center space-x-3 mb-3">
                 <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
