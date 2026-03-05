@@ -55,7 +55,7 @@ export function Layout({ children }: LayoutProps) {
                       'group relative flex items-center space-x-3 px-5 py-3 rounded-xl transition-all duration-300 overflow-hidden',
                       isActive
                         ? 'bg-gradient-to-r from-primary-600 to-primary-700 text-white shadow-lg shadow-primary-500/30'
-                        : 'text-gray-300 hover:bg-dark-700/80 hover:text-white hover:shadow-lg'
+                        : 'text-gray-300 hover:bg-gradient-to-r hover:from-primary-600 hover:to-primary-700 hover:text-white hover:shadow-lg hover:shadow-primary-500/20'
                     )}
                   >
                     <div className={clsx(
@@ -66,12 +66,12 @@ export function Layout({ children }: LayoutProps) {
                     </div>
                     <span className="relative z-10 font-medium">{item.label}</span>
                     
-                    {/* Hover effect */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-primary-600/20 to-primary-700/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    {/* Hover effect background */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary-600 to-primary-700 opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-xl"></div>
                     
-                    {/* Active indicator */}
+                    {/* Active indicator - melhor centralização */}
                     {isActive && (
-                      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-white rounded-full"></div>
+                      <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-6 h-0.5 bg-white rounded-full shadow-md"></div>
                     )}
                   </Link>
                 )
@@ -103,22 +103,26 @@ export function Layout({ children }: LayoutProps) {
                   key={item.path}
                   to={item.path}
                   className={clsx(
-                    'group relative flex flex-col items-center space-y-1 px-4 py-3 rounded-xl whitespace-nowrap transition-all duration-300 min-w-[80px]',
+                    'group relative flex flex-col items-center space-y-1 px-4 py-3 rounded-xl whitespace-nowrap transition-all duration-300 min-w-[80px] overflow-hidden',
                     isActive
                       ? 'bg-gradient-to-b from-primary-600 to-primary-700 text-white shadow-lg'
-                      : 'text-gray-300 hover:bg-dark-700/80 hover:text-white'
+                      : 'text-gray-300 hover:bg-gradient-to-b hover:from-primary-600 hover:to-primary-700 hover:text-white hover:shadow-lg'
                   )}
                 >
                   <div className={clsx(
-                    'transition-transform duration-300',
+                    'relative z-10 transition-transform duration-300',
                     isActive ? 'scale-110' : 'group-hover:scale-110'
                   )}>
                     <Icon className="w-5 h-5" />
                   </div>
-                  <span className="text-xs font-medium">{item.label}</span>
+                  <span className="relative z-10 text-xs font-medium">{item.label}</span>
                   
+                  {/* Hover effect background para mobile */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-primary-600 to-primary-700 opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-xl"></div>
+                  
+                  {/* Active indicator para mobile - melhor centralização */}
                   {isActive && (
-                    <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-6 h-0.5 bg-white rounded-full"></div>
+                    <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-6 h-0.5 bg-white rounded-full shadow-md"></div>
                   )}
                 </Link>
               )

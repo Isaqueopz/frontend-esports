@@ -85,3 +85,43 @@ export interface BracketNode {
   round: number
   position: number
 }
+
+// Admin types
+export const UserRole = {
+  ADMIN: 'ADMIN',
+  USER: 'USER'
+} as const
+
+export type UserRole = typeof UserRole[keyof typeof UserRole]
+
+export interface User {
+  id: string
+  name: string
+  email: string
+  role: UserRole
+  createdAt: string
+}
+
+export interface AdminStats {
+  totalTeams: number
+  totalMatches: number
+  activeChampionships: number
+  pendingMatches: number
+  completedMatches: number
+}
+
+export interface MatchUpdateRequest {
+  matchId: string
+  placarCT?: number
+  placarTR?: number
+  status: MatchStatus
+}
+
+export interface NewMatchRequest {
+  teamAId: string
+  teamBId: string
+  locationId: string
+  scheduledDate: string
+  championshipId: string
+  round?: number
+}
