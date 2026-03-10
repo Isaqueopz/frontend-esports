@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import type { AdminStats, Match } from '../../types'
+import type { Match, Team, Championship } from '../../types'
 import { MatchStatus } from '../../types'
+import { matchesService, teamsService, championshipsService } from '../../services/api'
 import {
   Users,
   Trophy,
@@ -14,7 +15,9 @@ import {
 } from 'lucide-react'
 
 export function AdminDashboard() {
-  const [stats, setStats] = useState<AdminStats | null>(null)
+  const [teams, setTeams] = useState<Team[]>([])
+  const [championships, setChampionships] = useState<Championship[]>([])
+  const [allMatches, setAllMatches] = useState<Match[]>([])
   const [pendingMatches, setPendingMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -25,37 +28,25 @@ export function AdminDashboard() {
   const loadAdminData = async () => {
     try {
       setLoading(true)
-      
-      // ⚠️ SPRING BOOT INTEGRATION POINT
-      // Substituir por chamadas reais à API
-      const mockStats: AdminStats = {
-        totalTeams: 16,
-        totalMatches: 45,
-        activeChampionships: 2,
-        pendingMatches: 8,
-        completedMatches: 23
-      }
-
-      const mockPendingMatches: Match[] = [
-        {
-          id: '1',
-          teamA: { id: '1', name: 'Team Alpha', players: [], wins: 0, losses: 0, points: 0, createdAt: '' },
-          teamB: { id: '2', name: 'Team Beta', players: [], wins: 0, losses: 0, points: 0, createdAt: '' },
-          location: { id: '1', name: 'Arena Principal', address: 'São Paulo, SP', capacity: 100, available: true },
-          scheduledDate: '2026-03-10T19:00:00Z',
-          status: MatchStatus.AGENDADA,
-          championshipId: '1'
-        }
-      ]
-
-      setStats(mockStats)
-      setPendingMatches(mockPendingMatches)
+      const [teamsData, championshipsData, matches, upcoming] = await Promise.all([
+        teamsService.getAll(),
+        championshipsService.getAll(),
+        matchesService.getAll(),
+        matchesService.getUpcoming(),
+      ])
+      setTeams(teamsData)
+      setChampionships(championshipsData)
+      setAllMatches(matches)
+      setPendingMatches(upcoming)
     } catch (error) {
       console.error('Erro ao carregar dados admin:', error)
     } finally {
       setLoading(false)
     }
   }
+
+  const activeChampionships = championships.filter(c => c.status === MatchStatus.EM_ANDAMENTO).length
+  const completedMatches = allMatches.filter(m => m.status === MatchStatus.CONCLUIDA).length
 
   const quickActions = [
     {
@@ -99,25 +90,13 @@ export function AdminDashboard() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-white mb-2">
-            Painel Administrativo
-          </h1>
-          <p className="text-gray-400">
-            Gerencie campeonatos, partidas e times
-          </p>
-        </div>
-        
-        <div className="flex space-x-3">
-          <Link
-            to="/admin/settings"
-            className="flex items-center space-x-2 px-4 py-2 bg-dark-700 hover:bg-dark-600 text-white rounded-lg transition-colors"
-          >
-            <Settings className="w-5 h-5" />
-            <span>Configurações</span>
-          </Link>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold text-white mb-2">
+          Painel Administrativo
+        </h1>
+        <p className="text-gray-400">
+          Gerencie campeonatos, partidas e times
+        </p>
       </div>
 
       {/* Stats Cards */}
@@ -126,7 +105,7 @@ export function AdminDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-400 text-sm">Total de Times</p>
-              <p className="text-2xl font-bold text-white">{stats?.totalTeams}</p>
+              <p className="text-2xl font-bold text-white">{teams.length}</p>
             </div>
             <Users className="w-8 h-8 text-blue-500" />
           </div>
@@ -136,7 +115,7 @@ export function AdminDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-400 text-sm">Campeonatos Ativos</p>
-              <p className="text-2xl font-bold text-white">{stats?.activeChampionships}</p>
+              <p className="text-2xl font-bold text-white">{activeChampionships}</p>
             </div>
             <Trophy className="w-8 h-8 text-yellow-500" />
           </div>
@@ -146,7 +125,7 @@ export function AdminDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-400 text-sm">Total de Partidas</p>
-              <p className="text-2xl font-bold text-white">{stats?.totalMatches}</p>
+              <p className="text-2xl font-bold text-white">{allMatches.length}</p>
             </div>
             <Gamepad2 className="w-8 h-8 text-purple-500" />
           </div>
@@ -156,7 +135,7 @@ export function AdminDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-400 text-sm">Partidas Pendentes</p>
-              <p className="text-2xl font-bold text-white">{stats?.pendingMatches}</p>
+              <p className="text-2xl font-bold text-white">{pendingMatches.length}</p>
             </div>
             <Clock className="w-8 h-8 text-orange-500" />
           </div>
@@ -166,7 +145,7 @@ export function AdminDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-400 text-sm">Partidas Finalizadas</p>
-              <p className="text-2xl font-bold text-white">{stats?.completedMatches}</p>
+              <p className="text-2xl font-bold text-white">{completedMatches}</p>
             </div>
             <CheckCircle className="w-8 h-8 text-green-500" />
           </div>
@@ -214,18 +193,18 @@ export function AdminDashboard() {
         <div className="p-6">
           {pendingMatches.length > 0 ? (
             <div className="space-y-4">
-              {pendingMatches.map((match) => (
+              {pendingMatches.slice(0, 5).map((match) => (
                 <div key={match.id} className="flex items-center justify-between p-4 bg-dark-700 rounded-lg">
                   <div className="flex items-center space-x-4">
                     <div className="text-center">
-                      <p className="font-medium text-white">{match.teamA.name}</p>
+                      <p className="font-medium text-white">{match.teamA?.name ?? 'A definir'}</p>
                       <p className="text-gray-400 text-sm">vs</p>
-                      <p className="font-medium text-white">{match.teamB.name}</p>
+                      <p className="font-medium text-white">{match.teamB?.name ?? 'A definir'}</p>
                     </div>
                     <div className="text-gray-400">
-                      <p className="text-sm">{match.location.name}</p>
+                      {match.location && <p className="text-sm">{match.location.name}</p>}
                       <p className="text-xs">
-                        {new Date(match.scheduledDate).toLocaleDateString('pt-BR')}
+                        {match.scheduledDate ? new Date(match.scheduledDate).toLocaleDateString('pt-BR') : 'A definir'}
                       </p>
                     </div>
                   </div>

@@ -1,176 +1,308 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import type { Championship } from '../../types'
-import { ChampionshipType } from '../../types'
+import type { Championship, Team } from '../../types'
+import { ChampionshipType, MatchStatus } from '../../types'
+import { championshipsService, teamsService } from '../../services/api'
 import {
-  Trophy,
   Plus,
-  Edit,
   Trash2,
+  Trophy,
+  Play,
   Users,
-  Calendar,
+  Search,
+  X,
+  Save,
   Swords,
-  ArrowRight,
-  RotateCw
+  CheckCircle2,
+  Clock,
+  Zap,
+  ChevronDown,
+  ChevronUp,
+  AlertCircle
 } from 'lucide-react'
 
 export function AdminChampionships() {
   const [championships, setChampionships] = useState<Championship[]>([])
+  const [teams, setTeams] = useState<Team[]>([])
   const [loading, setLoading] = useState(true)
-  const [showModal, setShowModal] = useState(false)
-  const [editingChampionship, setEditingChampionship] = useState<Championship | null>(null)
+  const [actionLoading, setActionLoading] = useState<number | null>(null)
+  const [expandedId, setExpandedId] = useState<number | null>(null)
 
-  const [formData, setFormData] = useState({
-    name: '',
-    type: ChampionshipType.MATA_MATA as string,
-    maxTeams: 16,
-    startDate: '',
-    endDate: ''
-  })
+  // New Championship Modal
+  const [showModal, setShowModal] = useState(false)
+  const [nome, setNome] = useState('')
+  const [tipo, setTipo] = useState<ChampionshipType>(ChampionshipType.MATA_MATA)
+  const [selectedTeamIds, setSelectedTeamIds] = useState<number[]>([])
+  const [teamSearch, setTeamSearch] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  // Message
+  const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null)
 
   useEffect(() => {
-    loadChampionships()
+    loadData()
   }, [])
 
-  const loadChampionships = async () => {
+  useEffect(() => {
+    if (message) {
+      const t = setTimeout(() => setMessage(null), 5000)
+      return () => clearTimeout(t)
+    }
+  }, [message])
+
+  const loadData = async () => {
     try {
       setLoading(true)
-
-      // ⚠️ SPRING BOOT INTEGRATION POINT
-      const mockChampionships: Championship[] = [
-        {
-          id: '1',
-          name: 'Liga Principal 2024',
-          type: ChampionshipType.MATA_MATA,
-          teams: Array(8).fill(null).map((_, i) => ({
-            id: String(i + 1),
-            name: `Team ${i + 1}`,
-            players: [],
-            wins: 0,
-            losses: 0,
-            points: 0,
-            createdAt: ''
-          })),
-          matches: [],
-          startDate: '2024-01-15T00:00:00Z',
-          endDate: '2024-06-30T00:00:00Z',
-          isActive: true,
-          maxTeams: 16,
-          currentRound: 2
-        },
-        {
-          id: '2',
-          name: 'Copa Inverno 2024',
-          type: ChampionshipType.PONTOS_CORRIDOS,
-          teams: Array(10).fill(null).map((_, i) => ({
-            id: String(i + 10),
-            name: `Team ${String.fromCharCode(65 + i)}`,
-            players: [],
-            wins: 0,
-            losses: 0,
-            points: 0,
-            createdAt: ''
-          })),
-          matches: [],
-          startDate: '2024-07-01T00:00:00Z',
-          endDate: '2024-12-31T00:00:00Z',
-          isActive: false,
-          maxTeams: 12,
-          currentRound: 5
-        }
-      ]
-
-      setChampionships(mockChampionships)
+      const [champsData, teamsData] = await Promise.all([
+        championshipsService.getAll(),
+        teamsService.getAll()
+      ])
+      setChampionships(champsData)
+      setTeams(teamsData)
     } catch (error) {
-      console.error('Erro ao carregar campeonatos:', error)
+      console.error('Erro ao carregar dados:', error)
     } finally {
       setLoading(false)
     }
   }
 
-  const openModal = (championship?: Championship) => {
-    if (championship) {
-      setEditingChampionship(championship)
-      setFormData({
-        name: championship.name,
-        type: championship.type,
-        maxTeams: championship.maxTeams,
-        startDate: championship.startDate.slice(0, 10),
-        endDate: championship.endDate.slice(0, 10)
-      })
-    } else {
-      setEditingChampionship(null)
-      setFormData({
-        name: '',
-        type: ChampionshipType.MATA_MATA,
-        maxTeams: 16,
-        startDate: '',
-        endDate: ''
-      })
+  const showMessage = (text: string, type: 'success' | 'error') => {
+    setMessage({ text, type })
+  }
+
+  const getStatusBadge = (status: MatchStatus) => {
+    const styles = {
+      [MatchStatus.AGENDADA]: 'bg-yellow-500/20 text-yellow-500',
+      [MatchStatus.EM_ANDAMENTO]: 'bg-blue-500/20 text-blue-500',
+      [MatchStatus.CONCLUIDA]: 'bg-green-500/20 text-green-500'
     }
+    const labels = {
+      [MatchStatus.AGENDADA]: 'Agendado',
+      [MatchStatus.EM_ANDAMENTO]: 'Em Andamento',
+      [MatchStatus.CONCLUIDA]: 'Concluído'
+    }
+    return (
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${styles[status]}`}>
+        {labels[status]}
+      </span>
+    )
+  }
+
+  const getTypeBadge = (tipoVal: ChampionshipType) => {
+    if (tipoVal === ChampionshipType.MATA_MATA) {
+      return (
+        <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-500/20 text-purple-400">
+          Mata-Mata
+        </span>
+      )
+    }
+    return (
+      <span className="px-2 py-1 rounded-full text-xs font-medium bg-cyan-500/20 text-cyan-400">
+        Pontos Corridos
+      </span>
+    )
+  }
+
+  // Championship actions
+  const handleStart = async (id: number) => {
+    try {
+      setActionLoading(id)
+      await championshipsService.start(id)
+      showMessage('Campeonato iniciado com sucesso!', 'success')
+      await loadData()
+    } catch (error) {
+      console.error(error)
+      showMessage('Erro ao iniciar campeonato.', 'error')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const handlePlay = async (id: number) => {
+    try {
+      setActionLoading(id)
+      const result = await championshipsService.play(id)
+      showMessage(typeof result === 'string' ? result : 'Rodada simulada!', 'success')
+      await loadData()
+    } catch (error) {
+      console.error(error)
+      showMessage('Erro ao simular rodada.', 'error')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const handleFinishQuartas = async (id: number) => {
+    try {
+      setActionLoading(id)
+      const result = await championshipsService.finishQuartas(id)
+      showMessage(typeof result === 'string' ? result : 'Quartas finalizadas!', 'success')
+      await loadData()
+    } catch (error) {
+      console.error(error)
+      showMessage('Erro ao finalizar quartas.', 'error')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const handleFinishSemifinais = async (id: number) => {
+    try {
+      setActionLoading(id)
+      const result = await championshipsService.finishSemifinais(id)
+      showMessage(typeof result === 'string' ? result : 'Semifinais finalizadas!', 'success')
+      await loadData()
+    } catch (error) {
+      console.error(error)
+      showMessage('Erro ao finalizar semifinais.', 'error')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const handleFinishFinal = async (id: number) => {
+    try {
+      setActionLoading(id)
+      const result = await championshipsService.finishFinal(id)
+      showMessage(typeof result === 'string' ? result : 'Final finalizada!', 'success')
+      await loadData()
+    } catch (error) {
+      console.error(error)
+      showMessage('Erro ao finalizar final.', 'error')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const handleDelete = async (id: number) => {
+    if (!confirm('Tem certeza que deseja excluir este campeonato?')) return
+    try {
+      await championshipsService.delete(id)
+      setChampionships(prev => prev.filter(c => c.id !== id))
+      showMessage('Campeonato excluído.', 'success')
+    } catch (error) {
+      console.error(error)
+      showMessage('Erro ao excluir campeonato.', 'error')
+    }
+  }
+
+  // Create championship
+  const openNewModal = () => {
+    setNome('')
+    setTipo(ChampionshipType.MATA_MATA)
+    setSelectedTeamIds([])
+    setTeamSearch('')
     setShowModal(true)
   }
 
-  const handleSave = async () => {
-    if (!formData.name.trim()) return
+  const toggleTeamSelection = (teamId: number) => {
+    setSelectedTeamIds(prev =>
+      prev.includes(teamId)
+        ? prev.filter(id => id !== teamId)
+        : [...prev, teamId]
+    )
+  }
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!nome.trim()) return
+    if (tipo === ChampionshipType.MATA_MATA && selectedTeamIds.length !== 8) {
+      showMessage('Mata-Mata requer exatamente 8 times.', 'error')
+      return
+    }
+    if (selectedTeamIds.length < 2) {
+      showMessage('Selecione pelo menos 2 times.', 'error')
+      return
+    }
 
     try {
-      if (editingChampionship) {
-        // ⚠️ SPRING BOOT INTEGRATION POINT
-        setChampionships(prev => prev.map(c =>
-          c.id === editingChampionship.id
-            ? { ...c, name: formData.name, type: formData.type as ChampionshipType, maxTeams: formData.maxTeams }
-            : c
-        ))
-      } else {
-        // ⚠️ SPRING BOOT INTEGRATION POINT
-        const newChampionship: Championship = {
-          id: String(Date.now()),
-          name: formData.name,
-          type: formData.type as ChampionshipType,
-          teams: [],
-          matches: [],
-          startDate: new Date(formData.startDate).toISOString(),
-          endDate: new Date(formData.endDate).toISOString(),
-          isActive: true,
-          maxTeams: formData.maxTeams
-        }
-        setChampionships(prev => [...prev, newChampionship])
+      setSaving(true)
+      await championshipsService.create({
+        nome: nome.trim(),
+        tipo,
+        teamIds: selectedTeamIds
+      })
+      setShowModal(false)
+      showMessage('Campeonato criado com sucesso!', 'success')
+      await loadData()
+    } catch (error) {
+      console.error(error)
+      showMessage('Erro ao criar campeonato.', 'error')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const filteredTeamsForSelect = teams.filter(t =>
+    t.name.toLowerCase().includes(teamSearch.toLowerCase())
+  )
+
+  const renderActions = (champ: Championship) => {
+    const isLoading = actionLoading === champ.id
+    const buttons: React.ReactNode[] = []
+
+    if (champ.status === MatchStatus.AGENDADA) {
+      buttons.push(
+        <button
+          key="start"
+          onClick={() => handleStart(champ.id)}
+          disabled={isLoading}
+          className="flex items-center space-x-1 px-3 py-1.5 bg-green-500 hover:bg-green-600 disabled:opacity-50 text-white rounded-lg text-sm transition-colors"
+        >
+          <Play className="w-4 h-4" />
+          <span>Iniciar</span>
+        </button>
+      )
+    }
+
+    if (champ.status === MatchStatus.EM_ANDAMENTO) {
+      if (champ.tipo === ChampionshipType.PONTOS_CORRIDOS) {
+        buttons.push(
+          <button
+            key="play"
+            onClick={() => handlePlay(champ.id)}
+            disabled={isLoading}
+            className="flex items-center space-x-1 px-3 py-1.5 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white rounded-lg text-sm transition-colors"
+          >
+            <Zap className="w-4 h-4" />
+            <span>Simular Rodada</span>
+          </button>
+        )
       }
 
-      setShowModal(false)
-    } catch (error) {
-      console.error('Erro ao salvar campeonato:', error)
+      if (champ.tipo === ChampionshipType.MATA_MATA) {
+        buttons.push(
+          <button
+            key="quartas"
+            onClick={() => handleFinishQuartas(champ.id)}
+            disabled={isLoading}
+            className="flex items-center space-x-1 px-3 py-1.5 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white rounded-lg text-sm transition-colors"
+          >
+            <Swords className="w-4 h-4" />
+            <span>Finalizar Quartas</span>
+          </button>,
+          <button
+            key="semis"
+            onClick={() => handleFinishSemifinais(champ.id)}
+            disabled={isLoading}
+            className="flex items-center space-x-1 px-3 py-1.5 bg-yellow-500 hover:bg-yellow-600 disabled:opacity-50 text-white rounded-lg text-sm transition-colors"
+          >
+            <Swords className="w-4 h-4" />
+            <span>Finalizar Semis</span>
+          </button>,
+          <button
+            key="final"
+            onClick={() => handleFinishFinal(champ.id)}
+            disabled={isLoading}
+            className="flex items-center space-x-1 px-3 py-1.5 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white rounded-lg text-sm transition-colors"
+          >
+            <Trophy className="w-4 h-4" />
+            <span>Finalizar Final</span>
+          </button>
+        )
+      }
     }
-  }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Tem certeza que deseja excluir este campeonato?')) return
-
-    try {
-      // ⚠️ SPRING BOOT INTEGRATION POINT
-      setChampionships(prev => prev.filter(c => c.id !== id))
-    } catch (error) {
-      console.error('Erro ao excluir campeonato:', error)
-    }
-  }
-
-  const handleGenerateNextRound = async (championship: Championship) => {
-    if (!confirm(`Gerar próxima rodada para "${championship.name}"?`)) return
-
-    try {
-      // ⚠️ SPRING BOOT INTEGRATION POINT
-      // Este endpoint no backend deve:
-      // 1. Pegar os vencedores da rodada atual
-      // 2. Sortear os confrontos da próxima rodada
-      // 3. Criar as partidas automaticamente
-      // await fetch(`/api/admin/championships/${championship.id}/generate-next-round`, { method: 'POST' })
-
-      alert(`Próxima rodada gerada com sucesso para "${championship.name}"!`)
-      loadChampionships()
-    } catch (error) {
-      console.error('Erro ao gerar próxima rodada:', error)
-    }
+    return buttons
   }
 
   if (loading) {
@@ -183,19 +315,31 @@ export function AdminChampionships() {
 
   return (
     <div className="space-y-6">
+      {/* Message */}
+      {message && (
+        <div className={`p-4 rounded-lg flex items-center space-x-2 ${
+          message.type === 'success' 
+            ? 'bg-green-500/20 border border-green-500/30 text-green-400'
+            : 'bg-red-500/20 border border-red-500/30 text-red-400'
+        }`}>
+          {message.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+          <span>{message.text}</span>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-white mb-2">
-            Campeonatos
+            Gerenciar Campeonatos
           </h1>
           <p className="text-gray-400">
-            Crie e gerencie campeonatos
+            Crie e gerencie campeonatos de CS2
           </p>
         </div>
 
         <button
-          onClick={() => openModal()}
+          onClick={openNewModal}
           className="flex items-center space-x-2 px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors"
         >
           <Plus className="w-5 h-5" />
@@ -204,204 +348,272 @@ export function AdminChampionships() {
       </div>
 
       {/* Championships List */}
-      <div className="space-y-6">
-        {championships.map(championship => (
-          <div key={championship.id} className="bg-dark-800 rounded-lg border border-dark-700 overflow-hidden">
-            <div className="p-6">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="w-14 h-14 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg flex items-center justify-center">
-                    <Trophy className="w-7 h-7 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold text-white">{championship.name}</h3>
-                    <div className="flex items-center space-x-4 mt-1 text-gray-400 text-sm">
-                      <span className="px-2 py-0.5 bg-dark-700 rounded text-xs">
-                        {championship.type === ChampionshipType.MATA_MATA ? 'Mata-Mata' : 'Pontos Corridos'}
-                      </span>
-                      <span className="flex items-center space-x-1">
-                        <Users className="w-4 h-4" />
-                        <span>{championship.teams.length}/{championship.maxTeams} times</span>
-                      </span>
-                      <span className="flex items-center space-x-1">
-                        <Calendar className="w-4 h-4" />
-                        <span>
-                          {new Date(championship.startDate).toLocaleDateString('pt-BR')} - {new Date(championship.endDate).toLocaleDateString('pt-BR')}
+      <div className="space-y-4">
+        {championships.length > 0 ? (
+          championships.map((champ) => (
+            <div key={champ.id} className="bg-dark-800 rounded-lg border border-dark-700">
+              <div
+                className="p-6 cursor-pointer"
+                onClick={() => setExpandedId(expandedId === champ.id ? null : champ.id)}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 rounded-full bg-primary-500/20 flex items-center justify-center">
+                      <Trophy className="w-6 h-6 text-primary-500" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-white">{champ.nome}</h3>
+                      <div className="flex items-center space-x-2 mt-1">
+                        {getTypeBadge(champ.tipo)}
+                        {getStatusBadge(champ.status)}
+                        <span className="text-gray-400 text-sm flex items-center space-x-1">
+                          <Users className="w-3 h-3" />
+                          <span>{champ.times.length} times</span>
                         </span>
-                      </span>
+                        <span className="text-gray-400 text-sm">
+                          {champ.tabela.length} partidas
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="flex items-center space-x-2">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    championship.isActive 
-                      ? 'bg-green-500/20 text-green-500'
-                      : 'bg-gray-500/20 text-gray-500'
-                  }`}>
-                    {championship.isActive ? 'Ativo' : 'Inativo'}
-                  </span>
+                  <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
+                      {renderActions(champ)}
+                      <button
+                        onClick={() => handleDelete(champ.id)}
+                        className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+                        title="Excluir campeonato"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                    {expandedId === champ.id ? (
+                      <ChevronUp className="w-5 h-5 text-gray-400" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5 text-gray-400" />
+                    )}
+                  </div>
                 </div>
               </div>
 
-              {/* Current Round */}
-              {championship.currentRound && (
-                <div className="mt-4 p-4 bg-dark-700 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-white font-medium">Rodada Atual: {championship.currentRound}</p>
-                      <p className="text-gray-400 text-sm">
-                        {championship.type === ChampionshipType.MATA_MATA
-                          ? 'Partidas eliminatórias em andamento'
-                          : `Rodada ${championship.currentRound} de ${championship.teams.length - 1}`
-                        }
-                      </p>
+              {expandedId === champ.id && (
+                <div className="px-6 pb-6 border-t border-dark-700 pt-4">
+                  {/* Teams */}
+                  <div className="mb-4">
+                    <h4 className="text-sm font-semibold text-gray-300 mb-2">Times Participantes</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {champ.times.map(team => (
+                        <span
+                          key={team.id}
+                          className="px-3 py-1 bg-dark-700 rounded-full text-sm text-gray-300"
+                        >
+                          {team.name}
+                        </span>
+                      ))}
                     </div>
-
-                    {/* Generate Next Round - KEY ADMIN FEATURE */}
-                    <button
-                      onClick={() => handleGenerateNextRound(championship)}
-                      className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white rounded-lg transition-all shadow-lg hover:shadow-primary-500/25"
-                    >
-                      <RotateCw className="w-5 h-5" />
-                      <span>Gerar Próxima Rodada</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
                   </div>
+
+                  {/* Recent Matches */}
+                  {champ.tabela.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-300 mb-2">
+                        Partidas ({champ.tabela.length})
+                      </h4>
+                      <div className="space-y-2 max-h-60 overflow-y-auto">
+                        {champ.tabela.slice(0, 10).map(match => (
+                          <div
+                            key={match.id}
+                            className="flex items-center justify-between bg-dark-700 rounded-lg px-4 py-2 text-sm"
+                          >
+                            <div className="flex items-center space-x-3">
+                              <span className="text-white font-medium">{match.teamA?.name ?? 'A definir'}</span>
+                              {match.status === MatchStatus.CONCLUIDA ? (
+                                <span className="text-primary-500 font-bold">
+                                  {match.placarCT} - {match.placarTR}
+                                </span>
+                              ) : (
+                                <span className="text-gray-500">vs</span>
+                              )}
+                              <span className="text-white font-medium">{match.teamB?.name ?? 'A definir'}</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              {match.round && (
+                                <span className="px-2 py-0.5 bg-dark-600 rounded text-xs text-gray-400">
+                                  {match.round}
+                                </span>
+                              )}
+                              {getStatusBadge(match.status)}
+                            </div>
+                          </div>
+                        ))}
+                        {champ.tabela.length > 10 && (
+                          <p className="text-gray-500 text-xs text-center py-2">
+                            ... e mais {champ.tabela.length - 10} partidas
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
-
-              {/* Actions */}
-              <div className="flex items-center space-x-3 mt-4">
-                <button
-                  onClick={() => openModal(championship)}
-                  className="flex items-center space-x-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
-                >
-                  <Edit className="w-4 h-4" />
-                  <span>Editar</span>
-                </button>
-
-                <Link
-                  to={`/admin/matches?championship=${championship.id}`}
-                  className="flex items-center space-x-2 px-4 py-2 bg-dark-700 hover:bg-dark-600 text-white rounded-lg transition-colors"
-                >
-                  <Swords className="w-4 h-4" />
-                  <span>Ver Partidas</span>
-                </Link>
-
-                <button
-                  onClick={() => handleDelete(championship.id)}
-                  className="flex items-center space-x-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  <span>Excluir</span>
-                </button>
-              </div>
             </div>
-          </div>
-        ))}
-
-        {championships.length === 0 && (
+          ))
+        ) : (
           <div className="text-center py-12 bg-dark-800 rounded-lg border border-dark-700">
             <Trophy className="w-16 h-16 text-gray-500 mx-auto mb-4" />
-            <p className="text-gray-400 text-lg mb-2">Nenhum campeonato cadastrado</p>
+            <p className="text-gray-400 text-lg mb-2">Nenhum campeonato encontrado</p>
+            <p className="text-gray-500 text-sm mb-4">
+              Crie seu primeiro campeonato para começar
+            </p>
             <button
-              onClick={() => openModal()}
+              onClick={openNewModal}
               className="inline-flex items-center space-x-2 px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors"
             >
               <Plus className="w-5 h-5" />
-              <span>Criar Primeiro Campeonato</span>
+              <span>Criar Campeonato</span>
             </button>
           </div>
         )}
       </div>
 
-      {/* Modal */}
+      {/* Create Championship Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="bg-dark-800 rounded-lg border border-dark-700 p-6 w-full max-w-lg mx-4">
-            <h2 className="text-xl font-semibold text-white mb-4">
-              {editingChampionship ? 'Editar Campeonato' : 'Novo Campeonato'}
-            </h2>
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-dark-800 rounded-lg border border-dark-700 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-dark-700">
+              <h2 className="text-xl font-bold text-white">Novo Campeonato</h2>
+              <button
+                onClick={() => setShowModal(false)}
+                className="p-2 hover:bg-dark-700 rounded-lg transition-colors text-gray-400"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-            <div className="space-y-4">
+            <form onSubmit={handleCreate} className="p-6 space-y-6">
               <div>
-                <label className="block text-white text-sm font-medium mb-2">Nome</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Nome do Campeonato *
+                </label>
                 <input
                   type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Nome do campeonato..."
-                  className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-primary-500"
-                  autoFocus
+                  value={nome}
+                  onChange={(e) => setNome(e.target.value)}
+                  placeholder="Ex: CS2 Major 2025"
+                  className="w-full px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-primary-500"
+                  required
                 />
               </div>
 
               <div>
-                <label className="block text-white text-sm font-medium mb-2">Tipo</label>
-                <select
-                  value={formData.type}
-                  onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value }))}
-                  className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:border-primary-500"
-                >
-                  <option value={ChampionshipType.MATA_MATA}>Mata-Mata (Eliminatórias)</option>
-                  <option value={ChampionshipType.PONTOS_CORRIDOS}>Pontos Corridos</option>
-                </select>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Tipo *
+                </label>
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setTipo(ChampionshipType.MATA_MATA)}
+                    className={`p-4 rounded-lg border-2 text-center transition-colors ${
+                      tipo === ChampionshipType.MATA_MATA
+                        ? 'border-primary-500 bg-primary-500/10'
+                        : 'border-dark-600 bg-dark-700 hover:border-dark-500'
+                    }`}
+                  >
+                    <Swords className={`w-8 h-8 mx-auto mb-2 ${
+                      tipo === ChampionshipType.MATA_MATA ? 'text-primary-500' : 'text-gray-400'
+                    }`} />
+                    <p className="text-white font-semibold">Mata-Mata</p>
+                    <p className="text-gray-400 text-xs mt-1">Requer 8 times</p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setTipo(ChampionshipType.PONTOS_CORRIDOS)}
+                    className={`p-4 rounded-lg border-2 text-center transition-colors ${
+                      tipo === ChampionshipType.PONTOS_CORRIDOS
+                        ? 'border-primary-500 bg-primary-500/10'
+                        : 'border-dark-600 bg-dark-700 hover:border-dark-500'
+                    }`}
+                  >
+                    <Trophy className={`w-8 h-8 mx-auto mb-2 ${
+                      tipo === ChampionshipType.PONTOS_CORRIDOS ? 'text-primary-500' : 'text-gray-400'
+                    }`} />
+                    <p className="text-white font-semibold">Pontos Corridos</p>
+                    <p className="text-gray-400 text-xs mt-1">2+ times</p>
+                  </button>
+                </div>
               </div>
 
+              {/* Team Selection */}
               <div>
-                <label className="block text-white text-sm font-medium mb-2">Máximo de Times</label>
-                <select
-                  value={formData.maxTeams}
-                  onChange={(e) => setFormData(prev => ({ ...prev, maxTeams: parseInt(e.target.value) }))}
-                  className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:border-primary-500"
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Selecionar Times * ({selectedTeamIds.length} selecionados
+                  {tipo === ChampionshipType.MATA_MATA && ' / 8 necessários'})
+                </label>
+
+                <div className="relative mb-3">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <input
+                    type="text"
+                    value={teamSearch}
+                    onChange={(e) => setTeamSearch(e.target.value)}
+                    placeholder="Buscar times..."
+                    className="w-full pl-9 pr-4 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white placeholder-gray-400 text-sm focus:outline-none focus:border-primary-500"
+                  />
+                </div>
+
+                <div className="max-h-48 overflow-y-auto space-y-1 bg-dark-700 rounded-lg p-2">
+                  {filteredTeamsForSelect.map(team => (
+                    <label
+                      key={team.id}
+                      className={`flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-colors ${
+                        selectedTeamIds.includes(team.id)
+                          ? 'bg-primary-500/20 border border-primary-500/30'
+                          : 'hover:bg-dark-600'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <input
+                          type="checkbox"
+                          checked={selectedTeamIds.includes(team.id)}
+                          onChange={() => toggleTeamSelection(team.id)}
+                          className="rounded border-dark-500 text-primary-500 focus:ring-primary-500"
+                        />
+                        <span className="text-white text-sm">{team.name}</span>
+                      </div>
+                      <span className="text-gray-400 text-xs">Rank #{team.ranking}</span>
+                    </label>
+                  ))}
+                </div>
+
+                {tipo === ChampionshipType.MATA_MATA && selectedTeamIds.length !== 8 && selectedTeamIds.length > 0 && (
+                  <p className="text-yellow-500 text-xs mt-2 flex items-center space-x-1">
+                    <AlertCircle className="w-3 h-3" />
+                    <span>Mata-Mata requer exatamente 8 times. Selecionados: {selectedTeamIds.length}</span>
+                  </p>
+                )}
+              </div>
+
+              {/* Submit */}
+              <div className="flex items-center justify-end space-x-4 pt-4 border-t border-dark-700">
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="px-6 py-2 bg-dark-700 hover:bg-dark-600 text-gray-300 rounded-lg transition-colors"
                 >
-                  <option value={4}>4 times</option>
-                  <option value={8}>8 times</option>
-                  <option value={16}>16 times</option>
-                  <option value={32}>32 times</option>
-                </select>
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving || !nome.trim() || selectedTeamIds.length < 2}
+                  className="flex items-center space-x-2 px-6 py-2 bg-primary-500 hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                >
+                  <Save className="w-5 h-5" />
+                  <span>{saving ? 'Criando...' : 'Criar Campeonato'}</span>
+                </button>
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-white text-sm font-medium mb-2">Data Início</label>
-                  <input
-                    type="date"
-                    value={formData.startDate}
-                    onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
-                    className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:border-primary-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-white text-sm font-medium mb-2">Data Fim</label>
-                  <input
-                    type="date"
-                    value={formData.endDate}
-                    onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
-                    className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:border-primary-500"
-                    required
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end space-x-3 mt-6">
-              <button
-                onClick={() => setShowModal(false)}
-                className="px-4 py-2 bg-dark-700 hover:bg-dark-600 text-white rounded-lg transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={!formData.name.trim()}
-                className="px-4 py-2 bg-primary-500 hover:bg-primary-600 disabled:bg-primary-700 text-white rounded-lg transition-colors"
-              >
-                {editingChampionship ? 'Salvar' : 'Criar'}
-              </button>
-            </div>
+            </form>
           </div>
         </div>
       )}

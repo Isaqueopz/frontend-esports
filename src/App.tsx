@@ -6,6 +6,7 @@ import { RankingPage } from './pages/RankingPage'
 import { BracketPage } from './pages/BracketPage'
 import { ResultsPage } from './pages/ResultsPage'
 import { TeamProfilePage } from './pages/TeamProfilePage'
+import { TeamsPage } from './pages/TeamsPage'
 import { AdminLogin } from './pages/admin/AdminLogin'
 import { AdminDashboard } from './pages/admin/AdminDashboard'
 import { AdminMatches } from './pages/admin/AdminMatches'
@@ -38,7 +39,8 @@ function App() {
         <Route path="/ranking" element={<PublicPage page={<RankingPage />} />} />
         <Route path="/bracket" element={<PublicPage page={<BracketPage />} />} />
         <Route path="/results" element={<PublicPage page={<ResultsPage />} />} />
-        <Route path="/team/:teamId" element={<PublicPage page={<TeamProfilePage />} />} />
+        <Route path="/teams" element={<PublicPage page={<TeamsPage />} />} />
+        <Route path="/teams/:teamId" element={<PublicPage page={<TeamProfilePage />} />} />
 
         {/* Admin Login */}
         <Route path="/admin/login" element={<AdminLogin />} />

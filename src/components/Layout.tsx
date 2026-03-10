@@ -5,7 +5,9 @@ import {
   Trophy, 
   Brackets, 
   BarChart3, 
-  Zap
+  Users,
+  Zap,
+  Shield
 } from 'lucide-react'
 
 interface LayoutProps {
@@ -16,7 +18,8 @@ const navItems = [
   { path: '/', label: 'Home', icon: Home },
   { path: '/ranking', label: 'Ranking', icon: Trophy },
   { path: '/bracket', label: 'Bracket', icon: Brackets },
-  { path: '/results', label: 'Resultados', icon: BarChart3 }
+  { path: '/results', label: 'Resultados', icon: BarChart3 },
+  { path: '/teams', label: 'Times', icon: Users }
 ]
 
 export function Layout({ children }: LayoutProps) {
@@ -78,14 +81,28 @@ export function Layout({ children }: LayoutProps) {
               })}
             </nav>
 
-            {/* Gaming-style LED indicator */}
-            <div className="hidden md:flex items-center space-x-2">
-              <div className="flex space-x-1">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <div className="w-2 h-2 bg-primary-500 rounded-full animate-pulse delay-150"></div>
-                <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse delay-300"></div>
+            {/* Admin link + LED indicator */}
+            <div className="hidden md:flex items-center space-x-4">
+              <Link
+                to="/admin"
+                className={clsx(
+                  'flex items-center space-x-2 px-4 py-2 rounded-xl transition-all duration-300',
+                  location.pathname.startsWith('/admin')
+                    ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                    : 'text-gray-400 hover:text-yellow-400 hover:bg-yellow-500/10'
+                )}
+              >
+                <Shield className="w-4 h-4" />
+                <span className="text-sm font-medium">Admin</span>
+              </Link>
+              <div className="flex items-center space-x-2">
+                <div className="flex space-x-1">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <div className="w-2 h-2 bg-primary-500 rounded-full animate-pulse delay-150"></div>
+                  <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse delay-300"></div>
+                </div>
+                <span className="text-xs text-green-400 font-mono">ONLINE</span>
               </div>
-              <span className="text-xs text-green-400 font-mono">ONLINE</span>
             </div>
           </div>
         </div>
@@ -127,6 +144,18 @@ export function Layout({ children }: LayoutProps) {
                 </Link>
               )
             })}
+            <Link
+              to="/admin"
+              className={clsx(
+                'flex flex-col items-center space-y-1 px-4 py-3 rounded-xl whitespace-nowrap transition-all duration-300 min-w-[80px]',
+                location.pathname.startsWith('/admin')
+                  ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                  : 'text-gray-400 hover:text-yellow-400 hover:bg-yellow-500/10'
+              )}
+            >
+              <Shield className="w-5 h-5" />
+              <span className="text-xs font-medium">Admin</span>
+            </Link>
           </div>
         </div>
       </nav>

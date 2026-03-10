@@ -5,7 +5,6 @@ import {
   MapPin,
   Trophy,
   Eye,
-  Zap,
   Swords,
   Users,
   Calendar
@@ -27,24 +26,21 @@ export function MatchCard({ match, onClick, showLocation = true }: MatchCardProp
       }`}
       onClick={onClick}
     >
-      {/* Background gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary-900/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
       
       <div className="relative z-10">
-        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <MatchStatusBadge status={match.status} />
           <div className="flex items-center space-x-2 text-sm text-gray-400">
             <Calendar className="w-4 h-4" />
-            <span>{formatDateTime(match.scheduledDate)}</span>
+            <span>{match.scheduledDate ? formatDateTime(match.scheduledDate) : 'A definir'}</span>
           </div>
         </div>
         
         <div className="flex items-center justify-between">
-          {/* Team A */}
           <div className="flex items-center space-x-4 flex-1 group-hover:scale-105 transition-transform duration-300">
             <div className="relative">
-              {match.teamA.logo ? (
+              {match.teamA?.logo ? (
                 <img 
                   src={match.teamA.logo} 
                   alt={match.teamA.name}
@@ -61,24 +57,20 @@ export function MatchCard({ match, onClick, showLocation = true }: MatchCardProp
             </div>
             <div>
               <h3 className="font-bold text-white text-lg group-hover:text-primary-300 transition-colors duration-300">
-                {match.teamA.name}
+                {match.teamA?.name ?? 'A definir'}
               </h3>
-              <div className="flex items-center space-x-3 text-sm">
-                <div className="flex items-center space-x-1 text-green-400">
-                  <Trophy className="w-3 h-3" />
-                  <span>{match.teamA.wins}V</span>
-                </div>
-                <div className="flex items-center space-x-1 text-red-400">
-                  <Zap className="w-3 h-3" />
-                  <span>{match.teamA.losses}D</span>
-                </div>
+              {match.teamA && (
+              <div className="flex items-center space-x-2 text-sm text-gray-400">
+                <span>Rank #{match.teamA.ranking}</span>
+                <span>•</span>
+                <span>{match.teamA.pontos} pts</span>
               </div>
+              )}
             </div>
           </div>
           
-          {/* VS / Score Section */}
           <div className="flex items-center justify-center mx-8">
-            {match.placarCT !== undefined && match.placarTR !== undefined ? (
+            {match.placarCT != null && match.placarTR != null ? (
               <div className="text-center bg-dark-700/50 rounded-xl p-4 min-w-[120px] group-hover:bg-dark-600/50 transition-colors duration-300">
                 <div className="text-3xl font-black text-primary-400 drop-shadow-lg">
                   {match.placarCT} : {match.placarTR}
@@ -98,25 +90,21 @@ export function MatchCard({ match, onClick, showLocation = true }: MatchCardProp
             )}
           </div>
           
-          {/* Team B */}
           <div className="flex items-center space-x-4 flex-1 justify-end group-hover:scale-105 transition-transform duration-300">
             <div className="text-right">
               <h3 className="font-bold text-white text-lg group-hover:text-primary-300 transition-colors duration-300">
-                {match.teamB.name}
+                {match.teamB?.name ?? 'A definir'}
               </h3>
-              <div className="flex items-center justify-end space-x-3 text-sm">
-                <div className="flex items-center space-x-1 text-green-400">
-                  <Trophy className="w-3 h-3" />
-                  <span>{match.teamB.wins}V</span>
-                </div>
-                <div className="flex items-center space-x-1 text-red-400">
-                  <Zap className="w-3 h-3" />
-                  <span>{match.teamB.losses}D</span>
-                </div>
+              {match.teamB && (
+              <div className="flex items-center justify-end space-x-2 text-sm text-gray-400">
+                <span>Rank #{match.teamB.ranking}</span>
+                <span>•</span>
+                <span>{match.teamB.pontos} pts</span>
               </div>
+              )}
             </div>
             <div className="relative">
-              {match.teamB.logo ? (
+              {match.teamB?.logo ? (
                 <img 
                   src={match.teamB.logo} 
                   alt={match.teamB.name}
@@ -134,7 +122,7 @@ export function MatchCard({ match, onClick, showLocation = true }: MatchCardProp
           </div>
         </div>
         
-        {showLocation && (
+        {showLocation && match.location && (
           <div className="mt-6 pt-4 border-t border-dark-600 group-hover:border-primary-500/30 transition-colors duration-300">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3 text-sm">
@@ -143,17 +131,23 @@ export function MatchCard({ match, onClick, showLocation = true }: MatchCardProp
                 </div>
                 <div>
                   <p className="text-white font-medium">{match.location.name}</p>
-                  <p className="text-gray-400 text-xs">Local da partida</p>
+                  <p className="text-gray-400 text-xs">{match.location.cidade}, {match.location.pais}</p>
                 </div>
               </div>
               
               {isClickable && (
                 <div className="flex items-center space-x-2 text-primary-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <Eye className="w-4 h-4" />
-                  <span className="text-sm font-medium">Assistir</span>
+                  <span className="text-sm font-medium">Detalhes</span>
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {match.map && (
+          <div className="mt-2 text-xs text-gray-500">
+            Mapa: {match.map}
           </div>
         )}
       </div>

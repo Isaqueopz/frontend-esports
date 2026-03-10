@@ -1,40 +1,38 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import type { Match, Team, Location, Championship } from '../../types'
+import type { Match, Team, Championship } from '../../types'
 import { MatchStatus } from '../../types'
+import { matchesService, teamsService, championshipsService } from '../../services/api'
 import {
-  Save,
   ArrowLeft,
-  Play,
-  CheckCircle,
+  Save,
+  Trophy,
+  Users,
   Calendar,
   MapPin,
-  Users,
-  Trophy
+  Target,
+  Swords
 } from 'lucide-react'
 
 export function AdminMatchEdit() {
-  const { matchId } = useParams()
+  const { matchId } = useParams<{ matchId: string }>()
   const navigate = useNavigate()
-  const isNewMatch = matchId === 'new'
+  const isNew = matchId === 'new'
 
   const [teams, setTeams] = useState<Team[]>([])
-  const [locations, setLocations] = useState<Location[]>([])
   const [championships, setChampionships] = useState<Championship[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
-  const [formData, setFormData] = useState({
-    teamAId: '',
-    teamBId: '',
-    locationId: '',
-    championshipId: '',
-    scheduledDate: '',
-    placarCT: 0,
-    placarTR: 0,
-    status: MatchStatus.AGENDADA as MatchStatus,
-    round: 1
-  })
+  const [teamAId, setTeamAId] = useState<number | ''>('')
+  const [teamBId, setTeamBId] = useState<number | ''>('')
+  const [scheduledDate, setScheduledDate] = useState('')
+  const [championshipId, setChampionshipId] = useState<number | ''>('')
+  const [status, setStatus] = useState<MatchStatus>(MatchStatus.AGENDADA)
+  const [placarCT, setPlacarCT] = useState<number>(0)
+  const [placarTR, setPlacarTR] = useState<number>(0)
+
+  const [match, setMatch] = useState<Match | null>(null)
 
   useEffect(() => {
     loadData()
@@ -43,64 +41,22 @@ export function AdminMatchEdit() {
   const loadData = async () => {
     try {
       setLoading(true)
+      const [teamsData, championshipsData] = await Promise.all([
+        teamsService.getAll(),
+        championshipsService.getAll()
+      ])
+      setTeams(teamsData)
+      setChampionships(championshipsData)
 
-      // ⚠️ SPRING BOOT INTEGRATION POINTS
-      const mockTeams: Team[] = [
-        { id: '1', name: 'Luminosity Gaming', players: [], wins: 5, losses: 2, points: 15, createdAt: '' },
-        { id: '2', name: 'FURIA Esports', players: [], wins: 4, losses: 3, points: 12, createdAt: '' },
-        { id: '3', name: 'MIBR', players: [], wins: 3, losses: 4, points: 9, createdAt: '' },
-        { id: '4', name: 'Imperial Esports', players: [], wins: 6, losses: 1, points: 18, createdAt: '' }
-      ]
-
-      const mockLocations: Location[] = [
-        { id: '1', name: 'Arena Principal', address: 'São Paulo, SP', capacity: 100, available: true },
-        { id: '2', name: 'Arena Secundária', address: 'Rio de Janeiro, RJ', capacity: 50, available: true },
-        { id: '3', name: 'Arena Norte', address: 'Belo Horizonte, MG', capacity: 75, available: true }
-      ]
-
-      const mockChampionships: Championship[] = [
-        {
-          id: '1',
-          name: 'Liga Principal 2024',
-          type: 'MATA_MATA' as any,
-          teams: [],
-          matches: [],
-          startDate: '2024-01-15T00:00:00Z',
-          endDate: '2024-06-30T00:00:00Z',
-          isActive: true,
-          maxTeams: 16
-        }
-      ]
-
-      setTeams(mockTeams)
-      setLocations(mockLocations)
-      setChampionships(mockChampionships)
-
-      if (!isNewMatch) {
-        const mockMatch: Match = {
-          id: matchId!,
-          teamA: mockTeams[0],
-          teamB: mockTeams[1],
-          location: mockLocations[0],
-          scheduledDate: '2026-03-10T19:00:00Z',
-          status: MatchStatus.AGENDADA,
-          placarCT: 0,
-          placarTR: 0,
-          championshipId: '1',
-          round: 1
-        }
-
-        setFormData({
-          teamAId: mockMatch.teamA.id,
-          teamBId: mockMatch.teamB.id,
-          locationId: mockMatch.location.id,
-          championshipId: mockMatch.championshipId,
-          scheduledDate: mockMatch.scheduledDate.slice(0, 16),
-          placarCT: mockMatch.placarCT || 0,
-          placarTR: mockMatch.placarTR || 0,
-          status: mockMatch.status,
-          round: mockMatch.round || 1
-        })
+      if (!isNew && matchId) {
+        const matchData = await matchesService.getById(Number(matchId))
+        setMatch(matchData)
+        setTeamAId(matchData.teamA?.id ?? '')
+        setTeamBId(matchData.teamB?.id ?? '')
+        setScheduledDate(matchData.scheduledDate ? matchData.scheduledDate.slice(0, 16) : '')
+        setStatus(matchData.status)
+        setPlacarCT(matchData.placarCT ?? 0)
+        setPlacarTR(matchData.placarTR ?? 0)
       }
     } catch (error) {
       console.error('Erro ao carregar dados:', error)
@@ -111,82 +67,48 @@ export function AdminMatchEdit() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    if (formData.teamAId === formData.teamBId) {
-      alert('Os times devem ser diferentes!')
-      return
-    }
+    if (!teamAId || !teamBId) return
 
     try {
       setSaving(true)
 
-      if (isNewMatch) {
-        // ⚠️ SPRING BOOT INTEGRATION POINT
-        // const response = await fetch('/api/admin/matches', {
-        //   method: 'POST',
-        //   headers: { 'Content-Type': 'application/json' },
-        //   body: JSON.stringify(formData)
-        // })
-        console.log('Criando nova partida:', formData)
-      } else {
-        // ⚠️ SPRING BOOT INTEGRATION POINT
-        // await fetch(`/api/admin/matches/${matchId}`, {
-        //   method: 'PUT',
-        //   headers: { 'Content-Type': 'application/json' },
-        //   body: JSON.stringify(formData)
-        // })
-        console.log('Atualizando partida:', { matchId, ...formData })
+      if (isNew) {
+        await matchesService.create({
+          teamAId: Number(teamAId),
+          teamBId: Number(teamBId),
+          scheduledDate: scheduledDate || undefined,
+          championshipId: championshipId ? Number(championshipId) : undefined,
+          status
+        })
+      } else if (matchId) {
+        const numericId = Number(matchId)
+
+        // Se tem placar, atualiza o score
+        if (placarCT > 0 || placarTR > 0) {
+          const scoreStatus = (placarCT >= 13 || placarTR >= 13) ? MatchStatus.CONCLUIDA : MatchStatus.EM_ANDAMENTO
+          await matchesService.updateScore(numericId, {
+            placarCT,
+            placarTR,
+            status: status === MatchStatus.AGENDADA ? scoreStatus : status
+          })
+        } else {
+          await matchesService.update(numericId, {
+            teamAId: Number(teamAId),
+            teamBId: Number(teamBId),
+            scheduledDate: scheduledDate || undefined,
+            championshipId: championshipId ? Number(championshipId) : undefined,
+            status
+          })
+        }
       }
 
       navigate('/admin/matches')
     } catch (error) {
       console.error('Erro ao salvar partida:', error)
-      alert('Erro ao salvar partida. Tente novamente.')
+      alert('Erro ao salvar partida. Verifique os dados e tente novamente.')
     } finally {
       setSaving(false)
     }
-  }
-
-  const handleStatusChange = (newStatus: MatchStatus) => {
-    setFormData(prev => ({ ...prev, status: newStatus }))
-  }
-
-  const getStatusButton = (status: MatchStatus, currentStatus: MatchStatus) => {
-    const isActive = status === currentStatus
-    const styles = {
-      [MatchStatus.AGENDADA]: 'bg-yellow-500 hover:bg-yellow-600',
-      [MatchStatus.EM_ANDAMENTO]: 'bg-blue-500 hover:bg-blue-600',
-      [MatchStatus.CONCLUIDA]: 'bg-green-500 hover:bg-green-600'
-    }
-
-    const icons = {
-      [MatchStatus.AGENDADA]: Calendar,
-      [MatchStatus.EM_ANDAMENTO]: Play,
-      [MatchStatus.CONCLUIDA]: CheckCircle
-    }
-
-    const labels = {
-      [MatchStatus.AGENDADA]: 'Agendada',
-      [MatchStatus.EM_ANDAMENTO]: 'Iniciar',
-      [MatchStatus.CONCLUIDA]: 'Finalizar'
-    }
-
-    const Icon = icons[status]
-
-    return (
-      <button
-        type="button"
-        onClick={() => handleStatusChange(status)}
-        className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-          isActive
-            ? `${styles[status]} text-white`
-            : 'bg-dark-700 hover:bg-dark-600 text-gray-300'
-        }`}
-      >
-        <Icon className="w-5 h-5" />
-        <span>{labels[status]}</span>
-      </button>
-    )
   }
 
   if (loading) {
@@ -197,226 +119,204 @@ export function AdminMatchEdit() {
     )
   }
 
-  const teamA = teams.find(t => t.id === formData.teamAId)
-  const teamB = teams.find(t => t.id === formData.teamBId)
-
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center space-x-4">
         <button
           onClick={() => navigate('/admin/matches')}
-          className="p-2 bg-dark-700 hover:bg-dark-600 rounded-lg transition-colors"
+          className="p-2 bg-dark-700 hover:bg-dark-600 text-gray-400 rounded-lg transition-colors"
         >
-          <ArrowLeft className="w-5 h-5 text-white" />
+          <ArrowLeft className="w-5 h-5" />
         </button>
-
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">
-            {isNewMatch ? 'Nova Partida' : 'Editar Partida'}
+          <h1 className="text-3xl font-bold text-white">
+            {isNew ? 'Nova Partida' : 'Editar Partida'}
           </h1>
           <p className="text-gray-400">
-            {isNewMatch
-              ? 'Configure uma nova partida para o campeonato'
-              : 'Atualize informações e resultados da partida'
-            }
+            {isNew ? 'Crie uma nova partida' : `Editando partida #${matchId}`}
           </p>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-8">
-        {/* Team Selection */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Team A */}
-          <div className="bg-dark-800 rounded-lg border border-dark-700 p-6">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
-              <Users className="w-5 h-5" />
-              <span>Time A</span>
-            </h3>
-
-            <select
-              value={formData.teamAId}
-              onChange={(e) => setFormData(prev => ({ ...prev, teamAId: e.target.value }))}
-              className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:border-primary-500 mb-4"
-              required
-            >
-              <option value="">Selecione o Time A</option>
-              {teams.map(team => (
-                <option key={team.id} value={team.id} disabled={team.id === formData.teamBId}>
-                  {team.name} ({team.wins}V - {team.losses}D)
-                </option>
-              ))}
-            </select>
-
-            {teamA && (
-              <div className="bg-dark-700 rounded-lg p-4">
-                <p className="text-white font-medium">{teamA.name}</p>
-                <p className="text-gray-400 text-sm">{teamA.points} pontos - {teamA.wins} vitórias</p>
-              </div>
-            )}
-          </div>
-
-          {/* Team B */}
-          <div className="bg-dark-800 rounded-lg border border-dark-700 p-6">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
-              <Users className="w-5 h-5" />
-              <span>Time B</span>
-            </h3>
-
-            <select
-              value={formData.teamBId}
-              onChange={(e) => setFormData(prev => ({ ...prev, teamBId: e.target.value }))}
-              className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:border-primary-500 mb-4"
-              required
-            >
-              <option value="">Selecione o Time B</option>
-              {teams.map(team => (
-                <option key={team.id} value={team.id} disabled={team.id === formData.teamAId}>
-                  {team.name} ({team.wins}V - {team.losses}D)
-                </option>
-              ))}
-            </select>
-
-            {teamB && (
-              <div className="bg-dark-700 rounded-lg p-4">
-                <p className="text-white font-medium">{teamB.name}</p>
-                <p className="text-gray-400 text-sm">{teamB.points} pontos - {teamB.wins} vitórias</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Match Settings */}
-        <div className="bg-dark-800 rounded-lg border border-dark-700 p-6">
-          <h3 className="text-lg font-semibold text-white mb-6">Configurações da Partida</h3>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Championship */}
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Teams Selection */}
+        <div className="bg-dark-800 rounded-lg border border-dark-700 p-6 space-y-4">
+          <h3 className="text-lg font-semibold text-white flex items-center space-x-2">
+            <Users className="w-5 h-5 text-primary-500" />
+            <span>Times</span>
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-white text-sm font-medium mb-2">
-                <Trophy className="w-4 h-4 inline mr-2" />
-                Campeonato
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Time A *
               </label>
               <select
-                value={formData.championshipId}
-                onChange={(e) => setFormData(prev => ({ ...prev, championshipId: e.target.value }))}
-                className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:border-primary-500"
+                value={teamAId}
+                onChange={(e) => setTeamAId(e.target.value ? Number(e.target.value) : '')}
+                className="w-full px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:border-primary-500"
                 required
               >
-                <option value="">Selecione o campeonato</option>
-                {championships.map(championship => (
-                  <option key={championship.id} value={championship.id}>
-                    {championship.name}
+                <option value="">Selecione o Time A</option>
+                {teams.map(team => (
+                  <option key={team.id} value={team.id} disabled={team.id === teamBId}>
+                    {team.name} (Rank #{team.ranking})
                   </option>
                 ))}
               </select>
             </div>
 
-            {/* Location */}
             <div>
-              <label className="block text-white text-sm font-medium mb-2">
-                <MapPin className="w-4 h-4 inline mr-2" />
-                Local
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Time B *
               </label>
               <select
-                value={formData.locationId}
-                onChange={(e) => setFormData(prev => ({ ...prev, locationId: e.target.value }))}
-                className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:border-primary-500"
+                value={teamBId}
+                onChange={(e) => setTeamBId(e.target.value ? Number(e.target.value) : '')}
+                className="w-full px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:border-primary-500"
                 required
               >
-                <option value="">Selecione o local</option>
-                {locations.map(location => (
-                  <option key={location.id} value={location.id}>
-                    {location.name} - {location.address}
+                <option value="">Selecione o Time B</option>
+                {teams.map(team => (
+                  <option key={team.id} value={team.id} disabled={team.id === teamAId}>
+                    {team.name} (Rank #{team.ranking})
                   </option>
                 ))}
               </select>
             </div>
-
-            {/* Scheduled Date */}
-            <div>
-              <label className="block text-white text-sm font-medium mb-2">
-                <Calendar className="w-4 h-4 inline mr-2" />
-                Data e Hora
-              </label>
-              <input
-                type="datetime-local"
-                value={formData.scheduledDate}
-                onChange={(e) => setFormData(prev => ({ ...prev, scheduledDate: e.target.value }))}
-                className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:border-primary-500"
-                required
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Status and Score */}
-        <div className="bg-dark-800 rounded-lg border border-dark-700 p-6">
-          <h3 className="text-lg font-semibold text-white mb-6">Status e Placar</h3>
-
-          {/* Status Buttons */}
-          <div className="mb-6">
-            <p className="text-white text-sm font-medium mb-3">Status da Partida</p>
-            <div className="flex flex-wrap gap-3">
-              {Object.values(MatchStatus).map(status => (
-                <div key={status}>
-                  {getStatusButton(status, formData.status)}
-                </div>
-              ))}
-            </div>
           </div>
 
-          {/* Score */}
-          {(formData.status === MatchStatus.EM_ANDAMENTO || formData.status === MatchStatus.CONCLUIDA) && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-white text-sm font-medium mb-2">
-                  Placar {teamA?.name || 'Time A'}
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  max="999"
-                  value={formData.placarCT}
-                  onChange={(e) => setFormData(prev => ({ ...prev, placarCT: parseInt(e.target.value) || 0 }))}
-                  className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:border-primary-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-white text-sm font-medium mb-2">
-                  Placar {teamB?.name || 'Time B'}
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  max="999"
-                  value={formData.placarTR}
-                  onChange={(e) => setFormData(prev => ({ ...prev, placarTR: parseInt(e.target.value) || 0 }))}
-                  className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:border-primary-500"
-                />
+          {teamAId && teamBId && (
+            <div className="flex items-center justify-center py-4">
+              <div className="flex items-center space-x-4 bg-dark-700 px-6 py-3 rounded-lg">
+                <span className="text-white font-semibold">
+                  {teams.find(t => t.id === teamAId)?.name}
+                </span>
+                <Swords className="w-6 h-6 text-primary-500" />
+                <span className="text-white font-semibold">
+                  {teams.find(t => t.id === teamBId)?.name}
+                </span>
               </div>
             </div>
           )}
         </div>
+
+        {/* Match Details */}
+        <div className="bg-dark-800 rounded-lg border border-dark-700 p-6 space-y-4">
+          <h3 className="text-lg font-semibold text-white flex items-center space-x-2">
+            <Calendar className="w-5 h-5 text-primary-500" />
+            <span>Detalhes da Partida</span>
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Data e Hora
+              </label>
+              <input
+                type="datetime-local"
+                value={scheduledDate}
+                onChange={(e) => setScheduledDate(e.target.value)}
+                className="w-full px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:border-primary-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Status
+              </label>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value as MatchStatus)}
+                className="w-full px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:border-primary-500"
+              >
+                <option value={MatchStatus.AGENDADA}>Agendada</option>
+                <option value={MatchStatus.EM_ANDAMENTO}>Em Andamento</option>
+                <option value={MatchStatus.CONCLUIDA}>Concluída</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Campeonato (opcional)
+              </label>
+              <select
+                value={championshipId}
+                onChange={(e) => setChampionshipId(e.target.value ? Number(e.target.value) : '')}
+                className="w-full px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:border-primary-500"
+              >
+                <option value="">Nenhum (amistoso)</option>
+                {championships.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.nome} ({c.tipo})
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Score */}
+        {!isNew && (
+          <div className="bg-dark-800 rounded-lg border border-dark-700 p-6 space-y-4">
+            <h3 className="text-lg font-semibold text-white flex items-center space-x-2">
+              <Target className="w-5 h-5 text-primary-500" />
+              <span>Placar</span>
+            </h3>
+            
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Placar {teams.find(t => t.id === teamAId)?.name || 'Time A'} (CT)
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  max={16}
+                  value={placarCT}
+                  onChange={(e) => setPlacarCT(Number(e.target.value))}
+                  className="w-full px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:border-primary-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Placar {teams.find(t => t.id === teamBId)?.name || 'Time B'} (TR)
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  max={16}
+                  value={placarTR}
+                  onChange={(e) => setPlacarTR(Number(e.target.value))}
+                  className="w-full px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:border-primary-500"
+                />
+              </div>
+            </div>
+
+            <p className="text-gray-500 text-sm">
+              CS2: O placar máximo por time é 16. O primeiro time a atingir 13 rounds vence.
+            </p>
+          </div>
+        )}
 
         {/* Actions */}
         <div className="flex items-center justify-end space-x-4">
           <button
             type="button"
             onClick={() => navigate('/admin/matches')}
-            className="px-6 py-3 bg-dark-700 hover:bg-dark-600 text-white rounded-lg transition-colors"
+            className="px-6 py-2 bg-dark-700 hover:bg-dark-600 text-gray-300 rounded-lg transition-colors"
           >
             Cancelar
           </button>
-
           <button
             type="submit"
-            disabled={saving}
-            className="flex items-center space-x-2 px-6 py-3 bg-primary-500 hover:bg-primary-600 disabled:bg-primary-700 text-white rounded-lg transition-colors"
+            disabled={saving || !teamAId || !teamBId}
+            className="flex items-center space-x-2 px-6 py-2 bg-primary-500 hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
           >
             <Save className="w-5 h-5" />
-            <span>{saving ? 'Salvando...' : 'Salvar Partida'}</span>
+            <span>{saving ? 'Salvando...' : (isNew ? 'Criar Partida' : 'Salvar Alterações')}</span>
           </button>
         </div>
       </form>

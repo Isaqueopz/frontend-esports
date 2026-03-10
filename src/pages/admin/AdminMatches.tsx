@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import type { Match } from '../../types'
 import { MatchStatus } from '../../types'
 import { formatDate } from '../../utils/dateUtils'
+import { matchesService } from '../../services/api'
 import {
   Edit,
   Trash2,
@@ -35,47 +36,8 @@ export function AdminMatches() {
   const loadMatches = async () => {
     try {
       setLoading(true)
-      
-      // ⚠️ SPRING BOOT INTEGRATION POINT
-      // Substituir por: const response = await fetch('/api/admin/matches')\n      
-      const mockMatches: Match[] = [
-        {
-          id: '1',
-          teamA: { id: '1', name: 'Luminosity Gaming', players: [], wins: 5, losses: 2, points: 15, createdAt: '' },
-          teamB: { id: '2', name: 'FURIA Esports', players: [], wins: 4, losses: 3, points: 12, createdAt: '' },
-          location: { id: '1', name: 'Arena Principal', address: 'São Paulo, SP', capacity: 100, available: true },
-          scheduledDate: '2026-03-10T19:00:00Z',
-          status: MatchStatus.AGENDADA,
-          championshipId: '1',
-          round: 1
-        },
-        {
-          id: '2',
-          teamA: { id: '3', name: 'MIBR', players: [], wins: 3, losses: 4, points: 9, createdAt: '' },
-          teamB: { id: '4', name: 'Imperial Esports', players: [], wins: 6, losses: 1, points: 18, createdAt: '' },
-          location: { id: '2', name: 'Arena Secundária', address: 'Rio de Janeiro, RJ', capacity: 50, available: true },
-          scheduledDate: '2026-03-08T20:00:00Z',
-          status: MatchStatus.EM_ANDAMENTO,
-          placarCT: 8,
-          placarTR: 12,
-          championshipId: '1',
-          round: 1
-        },
-        {
-          id: '3',
-          teamA: { id: '5', name: 'paiN Gaming', players: [], wins: 2, losses: 5, points: 6, createdAt: '' },
-          teamB: { id: '6', name: 'Fluxo', players: [], wins: 7, losses: 0, points: 21, createdAt: '' },
-          location: { id: '1', name: 'Arena Principal', address: 'São Paulo, SP', capacity: 100, available: true },
-          scheduledDate: '2026-03-05T18:00:00Z',
-          status: MatchStatus.CONCLUIDA,
-          placarCT: 10,
-          placarTR: 16,
-          championshipId: '1',
-          round: 1
-        }
-      ]
-
-      setMatches(mockMatches)
+      const data = await matchesService.getAll()
+      setMatches(data)
     } catch (error) {
       console.error('Erro ao carregar partidas:', error)
     } finally {
@@ -88,9 +50,9 @@ export function AdminMatches() {
 
     if (searchTerm) {
       filtered = filtered.filter(match =>
-        match.teamA.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        match.teamB.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        match.location.name.toLowerCase().includes(searchTerm.toLowerCase())
+        (match.teamA?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (match.teamB?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (match.location?.name || '').toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
 
@@ -132,13 +94,11 @@ export function AdminMatches() {
     }
   }
 
-  const handleDeleteMatch = async (matchId: string) => {
+  const handleDeleteMatch = async (matchId: number) => {
     if (!confirm('Tem certeza que deseja excluir esta partida?')) return
 
     try {
-      // ⚠️ SPRING BOOT INTEGRATION POINT
-      // await fetch(`/api/admin/matches/${matchId}`, { method: 'DELETE' })
-      
+      await matchesService.delete(matchId)
       setMatches(prev => prev.filter(m => m.id !== matchId))
     } catch (error) {
       console.error('Erro ao excluir partida:', error)
@@ -212,22 +172,21 @@ export function AdminMatches() {
             <div key={match.id} className="bg-dark-800 rounded-lg border border-dark-700 p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-6">
-                  {/* Match Info */}
                   <div className="flex items-center space-x-4">
                     <div className="text-center">
-                      <p className="font-semibold text-white text-lg">{match.teamA.name}</p>
-                      <p className="text-gray-400 text-sm">{match.teamA.wins}V - {match.teamA.losses}D</p>
+                      <p className="font-semibold text-white text-lg">{match.teamA?.name ?? 'A definir'}</p>
+                      <p className="text-gray-400 text-sm">{match.teamA ? `Rank #${match.teamA.ranking}` : ''}</p>
                     </div>
                     
                     <div className="text-center px-4">
-                      {match.status === MatchStatus.CONCLUIDA && match.placarCT !== undefined && match.placarTR !== undefined ? (
+                      {match.status === MatchStatus.CONCLUIDA && match.placarCT != null && match.placarTR != null ? (
                         <div>
                           <p className="text-2xl font-bold text-white">
                             {match.placarCT} - {match.placarTR}
                           </p>
                           <p className="text-xs text-gray-400">Final</p>
                         </div>
-                      ) : match.status === MatchStatus.EM_ANDAMENTO && match.placarCT !== undefined && match.placarTR !== undefined ? (
+                      ) : match.status === MatchStatus.EM_ANDAMENTO && match.placarCT != null && match.placarTR != null ? (
                         <div>
                           <p className="text-2xl font-bold text-primary-500">
                             {match.placarCT} - {match.placarTR}
@@ -238,37 +197,39 @@ export function AdminMatches() {
                         <div>
                           <p className="text-gray-400 text-sm">vs</p>
                           <p className="text-xs text-gray-500">
-                            {formatDate(match.scheduledDate)}
+                            {match.scheduledDate ? formatDate(match.scheduledDate) : 'A definir'}
                           </p>
                         </div>
                       )}
                     </div>
                     
                     <div className="text-center">
-                      <p className="font-semibold text-white text-lg">{match.teamB.name}</p>
-                      <p className="text-gray-400 text-sm">{match.teamB.wins}V - {match.teamB.losses}D</p>
+                      <p className="font-semibold text-white text-lg">{match.teamB?.name ?? 'A definir'}</p>
+                      <p className="text-gray-400 text-sm">{match.teamB ? `Rank #${match.teamB.ranking}` : ''}</p>
                     </div>
                   </div>
 
-                  {/* Additional Info */}
                   <div className="hidden md:flex items-center space-x-4 text-gray-400 text-sm">
-                    <div className="flex items-center space-x-1">
-                      <MapPin className="w-4 h-4" />
-                      <span>{match.location.name}</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <Calendar className="w-4 h-4" />
-                      <span>{new Date(match.scheduledDate).toLocaleDateString('pt-BR')}</span>
-                    </div>
+                    {match.location && (
+                      <div className="flex items-center space-x-1">
+                        <MapPin className="w-4 h-4" />
+                        <span>{match.location.name}</span>
+                      </div>
+                    )}
+                    {match.scheduledDate && (
+                      <div className="flex items-center space-x-1">
+                        <Calendar className="w-4 h-4" />
+                        <span>{new Date(match.scheduledDate).toLocaleDateString('pt-BR')}</span>
+                      </div>
+                    )}
                     {match.round && (
                       <span className="px-2 py-1 bg-dark-700 rounded text-xs">
-                        Round {match.round}
+                        {match.round}
                       </span>
                     )}
                   </div>
                 </div>
 
-                {/* Status and Actions */}
                 <div className="flex items-center space-x-3">
                   <div className="flex items-center space-x-2">
                     {getStatusIcon(match.status)}

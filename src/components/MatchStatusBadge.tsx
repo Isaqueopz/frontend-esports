@@ -30,7 +30,7 @@ const statusConfig = {
 }
 
 export function MatchStatusBadge({ status, className }: MatchStatusBadgeProps) {
-  const config = statusConfig[status]
+  const config = statusConfig[status] ?? statusConfig[MatchStatus.AGENDADA]
   const Icon = config.icon
   
   return (

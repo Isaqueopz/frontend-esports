@@ -14,114 +14,93 @@ export const ChampionshipType = {
 export type ChampionshipType = typeof ChampionshipType[keyof typeof ChampionshipType]
 
 export interface Player {
-  id: string
+  id: number
   name: string
-  nickname: string
-  avatar?: string
-  steamId?: string
+  nickname?: string | null
+  avatar?: string | null
+  steamId?: string | null
 }
 
 export interface Team {
-  id: string
+  id: number
   name: string
-  logo?: string
+  logo?: string | null
+  ranking: number
+  pontos: number
   players: Player[]
-  wins: number
-  losses: number
-  points: number
-  createdAt: string
 }
 
 export interface Location {
-  id: string
+  id: number
   name: string
-  address: string
-  capacity: number
-  available: boolean
+  cidade: string
+  pais: string
 }
 
 export interface Match {
-  id: string
-  teamA: Team
-  teamB: Team
-  location: Location
+  id: number
   scheduledDate: string
+  teamA?: Team | null
+  teamB?: Team | null
+  winner?: Team | null
+  placarCT?: number | null
+  placarTR?: number | null
+  map?: string | null
   status: MatchStatus
-  placarCT?: number
-  placarTR?: number
-  championshipId: string
-  round?: number
+  round?: string | null
+  location?: Location | null
 }
 
 export interface Championship {
-  id: string
-  name: string
-  type: ChampionshipType
-  teams: Team[]
-  matches: Match[]
-  startDate: string
-  endDate: string
-  isActive: boolean
-  maxTeams: number
-  currentRound?: number
+  id: number
+  nome: string
+  tipo: ChampionshipType
+  status: MatchStatus
+  times: Team[]
+  tabela: Match[]
+  bracketNodes?: BracketNode[]
+  rankings?: Ranking[]
 }
 
 export interface Ranking {
-  position: number
+  id: number
+  championship?: { id: number }
   team: Team
-  points: number
-  wins: number
-  losses: number
-  draws: number
-  goalsFor: number
-  goalsAgainst: number
-  goalsDifference: number
+  pontos: number
+  vitorias: number
+  derrotas: number
+  empates: number
+  jogos: number
+  posicao: number
 }
 
 export interface BracketNode {
-  id: string
-  match?: Match
-  nextMatchId?: string
-  round: number
-  position: number
+  id: number
+  match?: Match | null
+  round: string
+  vencedor?: Team | null
+  rodada: number
+  posicao: number
 }
 
-// Admin types
-export const UserRole = {
-  ADMIN: 'ADMIN',
-  USER: 'USER'
-} as const
-
-export type UserRole = typeof UserRole[keyof typeof UserRole]
-
-export interface User {
-  id: string
-  name: string
-  email: string
-  role: UserRole
-  createdAt: string
-}
-
-export interface AdminStats {
-  totalTeams: number
-  totalMatches: number
-  activeChampionships: number
-  pendingMatches: number
-  completedMatches: number
-}
-
-export interface MatchUpdateRequest {
-  matchId: string
-  placarCT?: number
-  placarTR?: number
+export interface ScoreUpdateRequest {
+  placarCT: number
+  placarTR: number
   status: MatchStatus
 }
 
 export interface NewMatchRequest {
-  teamAId: string
-  teamBId: string
-  locationId: string
-  scheduledDate: string
-  championshipId: string
+  teamAId: number
+  teamBId: number
+  locationId?: number
+  scheduledDate?: string
+  championshipId?: number
   round?: number
+  status?: MatchStatus
+}
+
+export interface NewChampionshipRequest {
+  nome: string
+  tipo: ChampionshipType
+  teamIds: number[]
 }

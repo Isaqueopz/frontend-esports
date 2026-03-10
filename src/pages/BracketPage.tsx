@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react'
-import type { Championship, Match, BracketNode } from '../types'
+import type { Championship, BracketNode } from '../types'
 import { ChampionshipType, MatchStatus } from '../types'
-import { MatchCard } from '../components/MatchCard'
+import { MatchStatusBadge } from '../components/MatchStatusBadge'
+import { formatDateTime } from '../utils/dateUtils.js'
+import { championshipsService } from '../services/api'
+import { Users } from 'lucide-react'
 
 export function BracketPage() {
   const [championships, setChampionships] = useState<Championship[]>([])
-  const [selectedChampionship, setSelectedChampionship] = useState<string>('')
+  const [selectedChampionship, setSelectedChampionship] = useState<number | null>(null)
   const [bracketData, setBracketData] = useState<BracketNode[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -14,7 +17,7 @@ export function BracketPage() {
   }, [])
 
   useEffect(() => {
-    if (selectedChampionship) {
+    if (selectedChampionship != null) {
       loadBracket(selectedChampionship)
     }
   }, [selectedChampionship])
@@ -22,42 +25,11 @@ export function BracketPage() {
   const loadData = async () => {
     try {
       setLoading(true)
-      
-      // ⚠️ SPRING BOOT INTEGRATION POINT
-      // Substituir por: 
-      // const response = await fetch('/api/championships?type=MATA_MATA')
-      // const championships = await response.json()
-      const mockChampionships: Championship[] = [
-        {
-          id: '2',
-          name: 'Copa Elite',
-          type: ChampionshipType.MATA_MATA,
-          teams: [],
-          matches: [],
-          startDate: '2024-02-01T00:00:00Z',
-          endDate: '2024-03-15T00:00:00Z',
-          isActive: true,
-          maxTeams: 8,
-          currentRound: 2
-        },
-        {
-          id: '4',
-          name: 'Torneio dos Campeões',
-          type: ChampionshipType.MATA_MATA,
-          teams: [],
-          matches: [],
-          startDate: '2024-04-01T00:00:00Z',
-          endDate: '2024-05-15T00:00:00Z',
-          isActive: false,
-          maxTeams: 16,
-          currentRound: 4
-        }
-      ]
-
-      const mataMata = mockChampionships.filter(c => c.type === ChampionshipType.MATA_MATA)
+      const all = await championshipsService.getAll()
+      const mataMata = all.filter((c: Championship) => c.tipo === ChampionshipType.MATA_MATA)
       setChampionships(mataMata)
       
-      if (mataMata.length > 0 && !selectedChampionship) {
+      if (mataMata.length > 0 && selectedChampionship == null) {
         setSelectedChampionship(mataMata[0].id)
       }
     } catch (error) {
@@ -67,284 +39,35 @@ export function BracketPage() {
     }
   }
 
-  const loadBracket = async (championshipId: string) => {
+  const loadBracket = async (championshipId: number) => {
     try {
-      // ⚠️ SPRING BOOT INTEGRATION POINT
-      // Substituir por: 
-      // const response = await fetch(`/api/championships/${championshipId}/bracket`)
-      // const bracket = await response.json()
-      const mockMatches: Match[] = [
-        // Quartas de Final
-        {
-          id: 'qf1',
-          teamA: {
-            id: '1',
-            name: 'FURIA Esports',
-            logo: 'https://via.placeholder.com/40',
-            players: [],
-            wins: 2,
-            losses: 0,
-            points: 6,
-            createdAt: '2024-01-01T00:00:00Z'
-          },
-          teamB: {
-            id: '8',
-            name: 'Team Liquid',
-            logo: 'https://via.placeholder.com/40',
-            players: [],
-            wins: 1,
-            losses: 1,
-            points: 3,
-            createdAt: '2024-01-01T00:00:00Z'
-          },
-          location: {
-            id: '1',
-            name: 'Arena São Paulo',
-            address: 'São Paulo, SP',
-            capacity: 100,
-            available: true
-          },
-          scheduledDate: '2024-03-01T19:00:00Z',
-          status: MatchStatus.CONCLUIDA,
-          placarCT: 16,
-          placarTR: 12,
-          championshipId: championshipId,
-          round: 1
-        },
-        {
-          id: 'qf2',
-          teamA: {
-            id: '2',
-            name: 'MIBR',
-            logo: 'https://via.placeholder.com/40',
-            players: [],
-            wins: 1,
-            losses: 1,
-            points: 3,
-            createdAt: '2024-01-01T00:00:00Z'
-          },
-          teamB: {
-            id: '7',
-            name: 'RED Canids',
-            logo: 'https://via.placeholder.com/40',
-            players: [],
-            wins: 0,
-            losses: 2,
-            points: 0,
-            createdAt: '2024-01-01T00:00:00Z'
-          },
-          location: {
-            id: '2',
-            name: 'Gaming House RJ',
-            address: 'Rio de Janeiro, RJ',
-            capacity: 50,
-            available: true
-          },
-          scheduledDate: '2024-03-01T20:00:00Z',
-          status: MatchStatus.CONCLUIDA,
-          placarCT: 16,
-          placarTR: 8,
-          championshipId: championshipId,
-          round: 1
-        },
-        {
-          id: 'qf3',
-          teamA: {
-            id: '3',
-            name: 'paiN Gaming',
-            logo: 'https://via.placeholder.com/40',
-            players: [],
-            wins: 1,
-            losses: 1,
-            points: 3,
-            createdAt: '2024-01-01T00:00:00Z'
-          },
-          teamB: {
-            id: '6',
-            name: 'Fluxo',
-            logo: 'https://via.placeholder.com/40',
-            players: [],
-            wins: 1,
-            losses: 1,
-            points: 3,
-            createdAt: '2024-01-01T00:00:00Z'
-          },
-          location: {
-            id: '3',
-            name: 'E-sports Arena BH',
-            address: 'Belo Horizonte, MG',
-            capacity: 75,
-            available: true
-          },
-          scheduledDate: '2024-03-02T19:00:00Z',
-          status: MatchStatus.EM_ANDAMENTO,
-          placarCT: 12,
-          placarTR: 10,
-          championshipId: championshipId,
-          round: 1
-        },
-        {
-          id: 'qf4',
-          teamA: {
-            id: '4',
-            name: 'Imperial Esports',
-            logo: 'https://via.placeholder.com/40',
-            players: [],
-            wins: 2,
-            losses: 0,
-            points: 6,
-            createdAt: '2024-01-01T00:00:00Z'
-          },
-          teamB: {
-            id: '5',
-            name: '9z Team',
-            logo: 'https://via.placeholder.com/40',
-            players: [],
-            wins: 1,
-            losses: 1,
-            points: 3,
-            createdAt: '2024-01-01T00:00:00Z'
-          },
-          location: {
-            id: '4',
-            name: 'Gaming Center RS',
-            address: 'Porto Alegre, RS',
-            capacity: 60,
-            available: true
-          },
-          scheduledDate: '2024-03-02T20:00:00Z',
-          status: MatchStatus.AGENDADA,
-          championshipId: championshipId,
-          round: 1
-        },
-        // Semifinais
-        {
-          id: 'sf1',
-          teamA: {
-            id: '1',
-            name: 'FURIA Esports',
-            logo: 'https://via.placeholder.com/40',
-            players: [],
-            wins: 3,
-            losses: 0,
-            points: 9,
-            createdAt: '2024-01-01T00:00:00Z'
-          },
-          teamB: {
-            id: '2',
-            name: 'MIBR',
-            logo: 'https://via.placeholder.com/40',
-            players: [],
-            wins: 2,
-            losses: 1,
-            points: 6,
-            createdAt: '2024-01-01T00:00:00Z'
-          },
-          location: {
-            id: '1',
-            name: 'Arena São Paulo',
-            address: 'São Paulo, SP',
-            capacity: 100,
-            available: true
-          },
-          scheduledDate: '2024-03-05T19:00:00Z',
-          status: MatchStatus.AGENDADA,
-          championshipId: championshipId,
-          round: 2
-        },
-        {
-          id: 'sf2',
-          teamA: {
-            id: '3',
-            name: 'TBD',
-            players: [],
-            wins: 0,
-            losses: 0,
-            points: 0,
-            createdAt: '2024-01-01T00:00:00Z'
-          },
-          teamB: {
-            id: '4',
-            name: 'TBD',
-            players: [],
-            wins: 0,
-            losses: 0,
-            points: 0,
-            createdAt: '2024-01-01T00:00:00Z'
-          },
-          location: {
-            id: '2',
-            name: 'Gaming House RJ',
-            address: 'Rio de Janeiro, RJ',
-            capacity: 50,
-            available: true
-          },
-          scheduledDate: '2024-03-05T20:30:00Z',
-          status: MatchStatus.AGENDADA,
-          championshipId: championshipId,
-          round: 2
-        },
-        // Final
-        {
-          id: 'final',
-          teamA: {
-            id: 'tbd1',
-            name: 'TBD',
-            players: [],
-            wins: 0,
-            losses: 0,
-            points: 0,
-            createdAt: '2024-01-01T00:00:00Z'
-          },
-          teamB: {
-            id: 'tbd2',
-            name: 'TBD',
-            players: [],
-            wins: 0,
-            losses: 0,
-            points: 0,
-            createdAt: '2024-01-01T00:00:00Z'
-          },
-          location: {
-            id: '1',
-            name: 'Arena São Paulo',
-            address: 'São Paulo, SP',
-            capacity: 100,
-            available: true
-          },
-          scheduledDate: '2024-03-08T20:00:00Z',
-          status: MatchStatus.AGENDADA,
-          championshipId: championshipId,
-          round: 3
-        }
-      ]
-
-      // Organizar matches por rodada para exibição em bracket
-      const nodes: BracketNode[] = mockMatches.map((match, index) => ({
-        id: match.id,
-        match,
-        round: match.round || 1,
-        position: index
-      }))
-
-      setBracketData(nodes)
+      const championship = await championshipsService.getById(championshipId)
+      if (championship.bracketNodes) {
+        setBracketData(championship.bracketNodes)
+      } else {
+        setBracketData([])
+      }
     } catch (error) {
       console.error('Erro ao carregar bracket:', error)
     }
   }
 
-  const getMatchesByRound = (round: number) => {
-    return bracketData.filter(node => node.round === round)
+  const getNodesByRound = (roundName: string) => {
+    return bracketData
+      .filter(node => node.round === roundName)
+      .sort((a, b) => a.posicao - b.posicao)
   }
 
-  const getRoundName = (round: number) => {
-    const roundNames = {
-      1: 'Quartas de Final',
-      2: 'Semifinais',
-      3: 'Final'
+  const getRoundDisplayName = (round: string) => {
+    const names: Record<string, string> = {
+      'QUARTAS': 'Quartas de Final',
+      'SEMIFINAL': 'Semifinais',
+      'FINAL': 'Final'
     }
-    return roundNames[round as keyof typeof roundNames] || `Rodada ${round}`
+    return names[round] || round
   }
+
+  const rounds = ['QUARTAS', 'SEMIFINAL', 'FINAL']
 
   if (loading) {
     return (
@@ -357,13 +80,15 @@ export function BracketPage() {
     )
   }
 
+  const selected = championships.find(c => c.id === selectedChampionship)
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-white mb-2">
-             Bracket dos Torneios
+            Bracket dos Torneios
           </h1>
           <p className="text-gray-400">
             Árvore interativa para campeonatos Mata-Mata
@@ -372,13 +97,13 @@ export function BracketPage() {
         
         {championships.length > 1 && (
           <select
-            value={selectedChampionship}
-            onChange={(e) => setSelectedChampionship(e.target.value)}
+            value={selectedChampionship ?? ''}
+            onChange={(e) => setSelectedChampionship(Number(e.target.value))}
             className="mt-4 md:mt-0 bg-dark-700 border border-dark-600 text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           >
             {championships.map((championship) => (
               <option key={championship.id} value={championship.id}>
-                {championship.name}
+                {championship.nome}
               </option>
             ))}
           </select>
@@ -386,107 +111,148 @@ export function BracketPage() {
       </div>
 
       {/* Championship Info */}
-      {selectedChampionship && (
+      {selected && (
         <div className="esports-card">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-xl font-semibold text-white">
-                {championships.find(c => c.id === selectedChampionship)?.name}
+                {selected.nome}
               </h2>
               <p className="text-gray-400">
-                Mata-Mata • {getRoundName(championships.find(c => c.id === selectedChampionship)?.currentRound || 1)}
+                Mata-Mata • {selected.times.length} times
               </p>
             </div>
             <span className={`text-sm px-3 py-1 rounded-full ${
-              championships.find(c => c.id === selectedChampionship)?.isActive
-                ? 'bg-green-500 text-green-900'
-                : 'bg-gray-500 text-gray-900'
+              selected.status === 'EM_ANDAMENTO' ? 'bg-green-500 text-green-900' :
+              selected.status === 'AGENDADA' ? 'bg-yellow-500 text-yellow-900' :
+              'bg-gray-500 text-gray-900'
             }`}>
-              {championships.find(c => c.id === selectedChampionship)?.isActive ? 'Ativo' : 'Finalizado'}
+              {selected.status === 'EM_ANDAMENTO' ? 'Em Andamento' :
+               selected.status === 'AGENDADA' ? 'Agendado' : 'Concluído'}
             </span>
           </div>
         </div>
       )}
 
-      {/* Bracket Visualization */}
-      <div className="space-y-8">
-        {[1, 2, 3].map((round) => {
-          const roundMatches = getMatchesByRound(round)
-          
-          if (roundMatches.length === 0) return null
+      {/* Bracket View */}
+      {bracketData.length > 0 ? (
+        <div className="overflow-x-auto">
+          <div className="flex gap-8 min-w-max p-4">
+            {rounds.map((round) => {
+              const nodes = getNodesByRound(round)
+              if (nodes.length === 0) return null
+              return (
+                <div key={round} className="flex flex-col">
+                  <h3 className="text-lg font-semibold text-primary-400 mb-4 text-center">
+                    {getRoundDisplayName(round)}
+                  </h3>
+                  <div className="flex flex-col justify-around flex-1 gap-4">
+                    {nodes.map((node) => {
+                      const match = node.match
+                      if (!match) {
+                        return (
+                          <div key={node.id} className="esports-card min-w-[320px]">
+                            <div className="text-center py-4 text-gray-500">Partida a definir</div>
+                          </div>
+                        )
+                      }
+                      return (
+                      <div key={node.id} className="esports-card min-w-[320px]">
+                        <div className="flex items-center justify-between mb-2">
+                          <MatchStatusBadge status={match.status} />
+                          {match.scheduledDate && (
+                            <span className="text-xs text-gray-400">
+                              {formatDateTime(match.scheduledDate)}
+                            </span>
+                          )}
+                        </div>
+                        
+                        {/* Team A */}
+                        <div className={`flex items-center justify-between p-3 rounded-lg mb-2 ${
+                          node.vencedor?.id && match.teamA?.id && node.vencedor.id === match.teamA.id
+                            ? 'bg-green-500/10 border border-green-500/30'
+                            : 'bg-dark-700'
+                        }`}>
+                          <div className="flex items-center space-x-3">
+                            {match.teamA?.logo ? (
+                              <img src={match.teamA.logo} alt={match.teamA.name ?? ''} className="w-8 h-8 rounded-full object-cover" />
+                            ) : (
+                              <div className="w-8 h-8 bg-dark-500 rounded-full flex items-center justify-center">
+                                <Users className="w-4 h-4 text-gray-400" />
+                              </div>
+                            )}
+                            <span className={`font-medium ${
+                              node.vencedor?.id && match.teamA?.id && node.vencedor.id === match.teamA.id ? 'text-green-400' : 'text-white'
+                            }`}>
+                              {match.teamA?.name ?? 'A definir'}
+                            </span>
+                          </div>
+                          <span className="text-white font-bold">
+                            {match.placarCT ?? '-'}
+                          </span>
+                        </div>
 
-          return (
-            <div key={round} className="space-y-4">
-              {/* Round Title */}
-              <div className="text-center">
-                <h3 className="text-xl font-bold text-primary-400 mb-2">
-                  {getRoundName(round)}
-                </h3>
-                <div className="w-24 h-1 bg-primary-500 mx-auto rounded-full"></div>
-              </div>
+                        {/* Team B */}
+                        <div className={`flex items-center justify-between p-3 rounded-lg ${
+                          node.vencedor?.id && match.teamB?.id && node.vencedor.id === match.teamB.id
+                            ? 'bg-green-500/10 border border-green-500/30'
+                            : 'bg-dark-700'
+                        }`}>
+                          <div className="flex items-center space-x-3">
+                            {match.teamB?.logo ? (
+                              <img src={match.teamB.logo} alt={match.teamB.name ?? ''} className="w-8 h-8 rounded-full object-cover" />
+                            ) : (
+                              <div className="w-8 h-8 bg-dark-500 rounded-full flex items-center justify-center">
+                                <Users className="w-4 h-4 text-gray-400" />
+                              </div>
+                            )}
+                            <span className={`font-medium ${
+                              node.vencedor?.id && match.teamB?.id && node.vencedor.id === match.teamB.id ? 'text-green-400' : 'text-white'
+                            }`}>
+                              {match.teamB?.name ?? 'A definir'}
+                            </span>
+                          </div>
+                          <span className="text-white font-bold">
+                            {match.placarTR ?? '-'}
+                          </span>
+                        </div>
 
-              {/* Matches Grid */}
-              <div className={`grid gap-6 ${
-                round === 1 ? 'md:grid-cols-2 lg:grid-cols-2' :
-                round === 2 ? 'md:grid-cols-2' :
-                'md:grid-cols-1 max-w-2xl mx-auto'
-              }`}>
-                {roundMatches.map((node) => (
-                  <div key={node.id} className="relative">
-                    {node.match && (
-                      <MatchCard
-                        match={node.match}
-                        showLocation={round === 3}
-                        onClick={() => {
-                          // Navigate to match room
-                        }}
-                      />
-                    )}
-                    
-                    {/* Connector Lines for Visual Effect */}
-                    {round < 3 && (
-                      <div className="hidden lg:block absolute -right-8 top-1/2 w-8 h-0.5 bg-dark-600 transform -translate-y-1/2"></div>
-                    )}
+                        {match.map && (
+                          <div className="mt-2 text-xs text-gray-500 text-center">
+                            Mapa: {match.map}
+                          </div>
+                        )}
+                      </div>
+                      )
+                    })}
                   </div>
-                ))}
-              </div>
-
-              {/* Visual Separator */}
-              {round < 3 && (
-                <div className="flex justify-center">
-                  <div className="w-32 h-0.5 bg-gradient-to-r from-transparent via-dark-600 to-transparent"></div>
                 </div>
-              )}
-            </div>
-          )
-        })}
-      </div>
-
-      {/* Tournament Rules */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-12">
-        <div className="esports-card">
-          <h3 className="font-medium text-white mb-3 flex items-center">
-            <span className="mr-2">📋</span>
-            Regras do Torneio
-          </h3>
-          <div className="space-y-2 text-gray-400 text-sm">
-            <div>• Sistema de eliminação simples</div>
-            <div>• Melhor de 1 (BO1) até as semifinais</div>
-            <div>• Final em melhor de 3 (BO3)</div>
-            <div>• Overtime em caso de empate 15x15</div>
+              )
+            })}
           </div>
         </div>
-        
-        <div className="esports-card">
-          <h3 className="font-medium text-white mb-3 flex items-center">
-            <span className="mr-2">🏆</span>
-            Premiação
-          </h3>
-          <div className="space-y-2 text-gray-400 text-sm">
-            <div><strong className="text-yellow-400">1º Lugar:</strong> R$ 50.000</div>
-            <div><strong className="text-gray-300">2º Lugar:</strong> R$ 20.000</div>
-            <div><strong className="text-yellow-600">3º Lugar:</strong> R$ 10.000</div>
-            <div><strong className="text-gray-400">4º Lugar:</strong> R$ 5.000</div>
+      ) : (
+        <div className="esports-card text-center py-12">
+          <p className="text-gray-400 text-lg">Nenhum bracket disponível</p>
+          <p className="text-gray-500 text-sm mt-2">O campeonato precisa ser iniciado para gerar o bracket.</p>
+        </div>
+      )}
+
+      {/* Tournament Rules */}
+      <div className="esports-card">
+        <h3 className="text-lg font-semibold text-white mb-4">Regras do Torneio</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+          <div className="bg-dark-700 rounded-lg p-4">
+            <h4 className="text-primary-400 font-medium mb-2">Formato</h4>
+            <p className="text-gray-400">Eliminatórias simples — quem perde está fora.</p>
+          </div>
+          <div className="bg-dark-700 rounded-lg p-4">
+            <h4 className="text-primary-400 font-medium mb-2">Mapa</h4>
+            <p className="text-gray-400">Maps: MIRAGE, DUST2, ANCIENT. Formato CS2.</p>
+          </div>
+          <div className="bg-dark-700 rounded-lg p-4">
+            <h4 className="text-primary-400 font-medium mb-2">Vitória</h4>
+            <p className="text-gray-400">Primeiro a 13 rounds, com overtime até 16.</p>
           </div>
         </div>
       </div>
