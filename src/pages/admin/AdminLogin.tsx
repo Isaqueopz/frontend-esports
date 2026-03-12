@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { useNavigate } from 'react-router-dom'
 import { Shield, Lock, Mail, Zap, Eye, EyeOff } from 'lucide-react'
 
@@ -7,15 +8,15 @@ export function AdminLogin() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState('')
+  // const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
+    // setError('')
 
     if (!email.trim() || !password.trim()) {
-      setError('Preencha todos os campos')
+      toast.error('Preencha todos os campos')
       return
     }
 
@@ -40,7 +41,7 @@ export function AdminLogin() {
       navigate('/admin')
 
     } catch (err) {
-      setError('Erro ao fazer login. Tente novamente.')
+      toast.error('Erro ao fazer login. Tente novamente.')
     } finally {
       setLoading(false)
     }
@@ -61,11 +62,7 @@ export function AdminLogin() {
         {/* Login Form */}
         <div className="bg-dark-800 rounded-xl border border-dark-700 p-8">
           <form onSubmit={handleLogin} className="space-y-6">
-            {error && (
-              <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-                <p className="text-red-400 text-sm">{error}</p>
-              </div>
-            )}
+
 
             <div>
               <label className="block text-white text-sm font-medium mb-2">

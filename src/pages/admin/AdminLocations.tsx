@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
 import type { Location } from '../../types'
 import { locationsService } from '../../services/api'
 import { ensureArray } from '../../hooks/useSafeArrays'
@@ -17,7 +18,7 @@ import {
 export function AdminLocations() {
   const [locations, setLocations] = useState<Location[]>([])
   const [loading, setLoading] = useState(true)
-  const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null)
+
   
   // Form state
   const [showModal, setShowModal] = useState(false)
@@ -33,13 +34,6 @@ export function AdminLocations() {
   useEffect(() => {
     loadLocations()
   }, [])
-
-  useEffect(() => {
-    if (message) {
-      const timer = setTimeout(() => setMessage(null), 5000)
-      return () => clearTimeout(timer)
-    }
-  }, [message])
 
   const loadLocations = async () => {
     try {
@@ -57,7 +51,8 @@ export function AdminLocations() {
   }
 
   const showMessage = (text: string, type: 'success' | 'error') => {
-    setMessage({ text, type })
+    if (type === 'success') toast.success(text)
+    else toast.error(text)
   }
 
   const openModal = (location?: Location) => {
@@ -151,18 +146,8 @@ export function AdminLocations() {
   }
 
   return (
+
     <div className="space-y-6">
-      {/* Message */}
-      {message && (
-        <div className={`p-4 rounded-lg flex items-center space-x-2 ${
-          message.type === 'success' 
-            ? 'bg-green-500/20 border border-green-500/30 text-green-400'
-            : 'bg-red-500/20 border border-red-500/30 text-red-400'
-        }`}>
-          {message.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
-          <span>{message.text}</span>
-        </div>
-      )}
 
       {/* Header */}
       <div className="flex items-center justify-between">

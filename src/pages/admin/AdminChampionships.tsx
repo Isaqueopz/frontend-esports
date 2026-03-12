@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
 import type { Championship, Team, Location } from '../../types'
 import { ChampionshipType, MatchStatus } from '../../types'
 import { championshipsService, teamsService, locationsService, matchesService } from '../../services/api'
@@ -49,19 +50,10 @@ export function AdminChampionships() {
   const [scheduleLocationIds, setScheduleLocationIds] = useState<number[]>([])
   const [scheduling, setScheduling] = useState(false)
 
-  // Message
-  const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null)
 
   useEffect(() => {
     loadData()
   }, [])
-
-  useEffect(() => {
-    if (message) {
-      const t = setTimeout(() => setMessage(null), 5000)
-      return () => clearTimeout(t)
-    }
-  }, [message])
 
   const loadData = async () => {
     try {
@@ -82,7 +74,8 @@ export function AdminChampionships() {
   }
 
   const showMessage = (text: string, type: 'success' | 'error') => {
-    setMessage({ text, type })
+    if (type === 'success') toast.success(text)
+    else toast.error(text)
   }
 
   const getStatusBadge = (status: MatchStatus) => {
@@ -537,18 +530,8 @@ export function AdminChampionships() {
   }
 
   return (
+
     <div className="space-y-6">
-      {/* Message */}
-      {message && (
-        <div className={`p-4 rounded-lg flex items-center space-x-2 ${
-          message.type === 'success' 
-            ? 'bg-green-500/20 border border-green-500/30 text-green-400'
-            : 'bg-red-500/20 border border-red-500/30 text-red-400'
-        }`}>
-          {message.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
-          <span>{message.text}</span>
-        </div>
-      )}
 
       {/* Header */}
       <div className="flex items-center justify-between">
