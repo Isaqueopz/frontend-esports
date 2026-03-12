@@ -13,38 +13,21 @@ export function AdminLogin() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    // setError('')
-
     if (!email.trim() || !password.trim()) {
       toast.error('Preencha todos os campos')
       return
     }
-
-    try {
-      setLoading(true)
-
-      // Integração com Spring Boot API
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      })
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.message || 'Credenciais inválidas')
+    setLoading(true)
+    // Simulação de login local
+    setTimeout(() => {
+      if (email === 'admin@esports.com' && password === 'admin123') {
+        localStorage.setItem('adminToken', 'mock-token')
+        navigate('/admin')
+      } else {
+        toast.error('Credenciais inválidas')
       }
-
-      const data = await response.json()
-      localStorage.setItem('adminToken', data.token)
-      navigate('/admin')
-
-    } catch (err) {
-      toast.error('Erro ao fazer login. Tente novamente.')
-    } finally {
       setLoading(false)
-    }
+    }, 800)
   }
 
   return (
