@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import type { Team, Player } from '../../types'
 import { teamsService } from '../../services/api'
+import { ensureArray } from '../../hooks/useSafeArrays'
 import {
   Plus,
   Edit,
@@ -44,14 +45,15 @@ export function AdminTeams() {
   }, [])
 
   useEffect(() => {
+    const safeTeams = ensureArray(teams)
     if (searchTerm) {
       setFilteredTeams(
-        teams.filter(t =>
+        safeTeams.filter(t =>
           t.name.toLowerCase().includes(searchTerm.toLowerCase())
         )
       )
     } else {
-      setFilteredTeams(teams)
+      setFilteredTeams(safeTeams)
     }
   }, [teams, searchTerm])
 
@@ -59,9 +61,11 @@ export function AdminTeams() {
     try {
       setLoading(true)
       const data = await teamsService.getAll()
-      setTeams(data)
+      const safeData = ensureArray(data)
+      setTeams(safeData)
     } catch (error) {
       console.error('Erro ao carregar times:', error)
+      setTeams([])
     } finally {
       setLoading(false)
     }

@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import type { Match } from '../../types'
 import { MatchStatus } from '../../types'
-import { formatDate } from '../../utils/dateUtils'
+import { formatDate, formatDateTime } from '../../utils/dateUtils'
 import { matchesService } from '../../services/api'
+import { ensureArray } from '../../hooks/useSafeArrays'
 import {
   Edit,
   Trash2,
@@ -37,16 +38,18 @@ export function AdminMatches() {
     try {
       setLoading(true)
       const data = await matchesService.getAll()
-      setMatches(data)
+      const safeData = ensureArray(data)
+      setMatches(safeData)
     } catch (error) {
       console.error('Erro ao carregar partidas:', error)
+      setMatches([])
     } finally {
       setLoading(false)
     }
   }
 
   const filterMatches = () => {
-    let filtered = matches
+    let filtered = ensureArray(matches)
 
     if (searchTerm) {
       filtered = filtered.filter(match =>
@@ -105,6 +108,26 @@ export function AdminMatches() {
     }
   }
 
+  const handleDeleteAll = async () => {
+    const target = statusFilter !== 'ALL' ? filteredMatches : matches
+    const label = statusFilter !== 'ALL'
+      ? { AGENDADA: 'agendadas', EM_ANDAMENTO: 'em andamento', CONCLUIDA: 'concluídas' }[statusFilter]
+      : 'todas'
+    if (!confirm(`Tem certeza que deseja excluir ${target.length} partidas (${label})?`)) return
+
+    let deleted = 0
+    for (const m of target) {
+      try {
+        await matchesService.delete(m.id)
+        deleted++
+      } catch (err) {
+        console.error(`Erro ao excluir partida #${m.id}:`, err)
+      }
+    }
+    setMatches(prev => prev.filter(m => !target.some(t => t.id === m.id)))
+    console.log(`🗑️ ${deleted}/${target.length} partidas excluídas`)
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-96">
@@ -126,13 +149,24 @@ export function AdminMatches() {
           </p>
         </div>
         
-        <Link
-          to="/admin/matches/new"
-          className="flex items-center space-x-2 px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors"
-        >
-          <Plus className="w-5 h-5" />
-          <span>Nova Partida</span>
-        </Link>
+        <div className="flex items-center space-x-3">
+          {filteredMatches.length > 0 && (
+            <button
+              onClick={handleDeleteAll}
+              className="flex items-center space-x-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+            >
+              <Trash2 className="w-5 h-5" />
+              <span>Excluir {statusFilter !== 'ALL' ? 'Filtradas' : 'Todas'} ({filteredMatches.length})</span>
+            </button>
+          )}
+          <Link
+            to="/admin/matches/new"
+            className="flex items-center space-x-2 px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Nova Partida</span>
+          </Link>
+        </div>
       </div>
 
       {/* Filters */}
@@ -197,7 +231,7 @@ export function AdminMatches() {
                         <div>
                           <p className="text-gray-400 text-sm">vs</p>
                           <p className="text-xs text-gray-500">
-                            {match.scheduledDate ? formatDate(match.scheduledDate) : 'A definir'}
+                            {match.scheduledDate ? formatDateTime(match.scheduledDate) : 'A definir'}
                           </p>
                         </div>
                       )}
@@ -213,13 +247,13 @@ export function AdminMatches() {
                     {match.location && (
                       <div className="flex items-center space-x-1">
                         <MapPin className="w-4 h-4" />
-                        <span>{match.location.name}</span>
+                        <span>{match.location.name || match.location.nome}</span>
                       </div>
                     )}
                     {match.scheduledDate && (
                       <div className="flex items-center space-x-1">
                         <Calendar className="w-4 h-4" />
-                        <span>{new Date(match.scheduledDate).toLocaleDateString('pt-BR')}</span>
+                        <span>{formatDateTime(match.scheduledDate)}</span>
                       </div>
                     )}
                     {match.round && (

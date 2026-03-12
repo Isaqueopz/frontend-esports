@@ -1,4 +1,4 @@
-import type { Team, Match, Championship, ScoreUpdateRequest, NewMatchRequest, NewChampionshipRequest } from '../types'
+import type { Team, Match, Championship, ScoreUpdateRequest, NewMatchRequest, NewChampionshipRequest, Location } from '../types'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
 
@@ -12,7 +12,33 @@ async function apiCall<T>(endpoint: string, options?: RequestInit): Promise<T> {
   })
 
   if (!response.ok) {
-    throw new Error(`API Error: ${response.status} - ${response.statusText}`)
+    console.error(`❌ API Error: ${options?.method || 'GET'} ${API_BASE_URL}${endpoint} - ${response.status}`)
+    
+    // Try to extract error message from response body
+    let errorMessage = `API Error: ${response.status} - ${response.statusText}`
+    
+    try {
+      const errorBody = await response.text()
+      if (errorBody) {
+        console.error(`📄 Error Body:`, errorBody)
+        // If it's JSON, extract the message
+        try {
+          const errorJson = JSON.parse(errorBody)
+          if (errorJson.message) {
+            errorMessage = errorJson.message
+          } else if (errorJson.error) {
+            errorMessage = errorJson.error
+          }
+        } catch {
+          // If not JSON, use the text as is
+          errorMessage = errorBody
+        }
+      }
+    } catch {
+      // If we can't read the body, use the default message
+    }
+    
+    throw new Error(errorMessage)
   }
 
   const text = await response.text()
@@ -70,4 +96,59 @@ export const championshipsService = {
   finishQuartas: (id: number) => apiCall<string>(`/championships/${id}/quartas/finish`, { method: 'POST' }),
   finishSemifinais: (id: number) => apiCall<string>(`/championships/${id}/semifinais/finish`, { method: 'POST' }),
   finishFinal: (id: number) => apiCall<string>(`/championships/${id}/final/finish`, { method: 'POST' }),
+}
+
+export const locationsService = {
+  getAll: () => apiCall<Location[]>('/locations'),
+  getById: (id: number) => apiCall<Location>(`/locations/${id}`),
+  create: (location: { name: string; cidade: string; pais: string }) =>
+    apiCall<Location>('/locations', { method: 'POST', body: JSON.stringify(location) }),
+  update: (id: number, location: { name: string; cidade: string; pais: string }) =>
+    apiCall<Location>(`/locations/${id}`, { method: 'PUT', body: JSON.stringify(location) }),
+  delete: (id: number) => apiCall<void>(`/locations/${id}`, { method: 'DELETE' }),
+}
+
+// 🧪 Debug function para testar endpoints individualmente
+export const debugService = {
+  async testAllEndpoints() {
+    console.log(`🔍 === TESTANDO TODOS OS ENDPOINTS ===`)
+    const endpoints = [
+      { name: 'GET /teams', fn: () => teamsService.getAll() },
+      { name: 'GET /championships', fn: () => championshipsService.getAll() },
+      { name: 'GET /matches', fn: () => matchesService.getAll() },
+      { name: 'GET /matches/upcoming', fn: () => matchesService.getUpcoming() },
+      { name: 'GET /locations', fn: () => locationsService.getAll() },
+    ]
+
+    for (const endpoint of endpoints) {
+      try {
+        console.log(`🧪 Testing: ${endpoint.name}`)
+        await endpoint.fn()
+        console.log(`✅ ${endpoint.name} - SUCCESS`)
+      } catch (error) {
+        console.error(`❌ ${endpoint.name} - FAILED:`, error)
+      }
+      await new Promise(resolve => setTimeout(resolve, 500)) // Wait 500ms between tests
+    }
+  },
+
+  async testChampionshipById(id: number) {
+    try {
+      console.log(`🧪 Testing: GET /championships/${id}`)
+      await championshipsService.getById(id)
+      console.log(`✅ GET /championships/${id} - SUCCESS`)
+    } catch (error) {
+      console.error(`❌ GET /championships/${id} - FAILED:`, error)
+    }
+  },
+
+  async testTeamById(id: number) {
+    try {
+      console.log(`🧪 Testing: GET /teams/${id}`)
+      await teamsService.getById(id)
+      console.log(`✅ GET /teams/${id} - SUCCESS`)
+    } catch (error) {
+      console.error(`❌ GET /teams/${id} - FAILED:`, error)
+    }
+  }
 }

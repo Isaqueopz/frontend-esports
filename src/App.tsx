@@ -13,6 +13,8 @@ import { AdminMatches } from './pages/admin/AdminMatches'
 import { AdminMatchEdit } from './pages/admin/AdminMatchEdit'
 import { AdminTeams } from './pages/admin/AdminTeams'
 import { AdminChampionships } from './pages/admin/AdminChampionships'
+import { AdminLocations } from './pages/admin/AdminLocations'
+import { AdminDebug } from './pages/admin/AdminDebug'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   // ⚠️ SPRING BOOT INTEGRATION POINT
@@ -59,6 +61,8 @@ function App() {
           <Route path="matches/:matchId" element={<AdminMatchEdit />} />
           <Route path="teams" element={<AdminTeams />} />
           <Route path="championships" element={<AdminChampionships />} />
+          <Route path="locations" element={<AdminLocations />} />
+          <Route path="debug" element={<AdminDebug />} />
         </Route>
       </Routes>
     </Router>

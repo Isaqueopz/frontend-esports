@@ -5,6 +5,8 @@ import {
   Gamepad2,
   Users,
   Trophy,
+  MapPin,
+  Bug,
   LogOut,
   ChevronLeft,
   Shield
@@ -15,6 +17,8 @@ const adminNavItems = [
   { path: '/admin/matches', label: 'Partidas', icon: Gamepad2 },
   { path: '/admin/teams', label: 'Times', icon: Users },
   { path: '/admin/championships', label: 'Campeonatos', icon: Trophy },
+  { path: '/admin/locations', label: 'Locais', icon: MapPin },
+  { path: '/admin/debug', label: 'Debug API', icon: Bug },
 ]
 
 export function AdminLayout() {
@@ -76,11 +80,24 @@ export function AdminLayout() {
           </Link>
 
           <button
-            onClick={() => {
-              // ⚠️ SPRING BOOT INTEGRATION POINT
-              // Implementar logout real
-              localStorage.removeItem('adminToken')
-              window.location.href = '/admin/login'
+            onClick={async () => {
+              try {
+                // Logout no backend (opcional - JWT geralmente é stateless)
+                const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
+                const token = localStorage.getItem('adminToken')
+                if (token) {
+                  await fetch(`${API_BASE_URL}/auth/logout`, {
+                    method: 'POST',
+                    headers: { 
+                      'Authorization': `Bearer ${token}`,
+                      'Content-Type': 'application/json'
+                    }
+                  }).catch(() => {}) // Ignora erros de logout
+                }
+              } finally {
+                localStorage.removeItem('adminToken')
+                window.location.href = '/admin/login'
+              }
             }}
             className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
           >

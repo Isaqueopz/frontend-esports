@@ -22,26 +22,23 @@ export function AdminLogin() {
     try {
       setLoading(true)
 
-      // ⚠️ SPRING BOOT INTEGRATION POINT
-      // Substituir por chamada real à API de autenticação
-      // const response = await fetch('/api/auth/login', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ email, password })
-      // })
-      // const data = await response.json()
-      // if (!response.ok) throw new Error(data.message)
-      // localStorage.setItem('adminToken', data.token)
-
-      // Mock: simulando login
-      await new Promise(resolve => setTimeout(resolve, 1000))
-
-      if (email === 'admin@esports.com' && password === 'admin123') {
-        localStorage.setItem('adminToken', 'mock-jwt-token')
-        navigate('/admin')
-      } else {
-        setError('Email ou senha inválidos')
+      // Integração com Spring Boot API
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.message || 'Credenciais inválidas')
       }
+
+      const data = await response.json()
+      localStorage.setItem('adminToken', data.token)
+      navigate('/admin')
+
     } catch (err) {
       setError('Erro ao fazer login. Tente novamente.')
     } finally {

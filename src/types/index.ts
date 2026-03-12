@@ -33,6 +33,7 @@ export interface Team {
 export interface Location {
   id: number
   name: string
+  nome?: string  // Compatibilidade
   cidade: string
   pais: string
 }
@@ -60,6 +61,7 @@ export interface Championship {
   tabela: Match[]
   bracketNodes?: BracketNode[]
   rankings?: Ranking[]
+  allowMultipleMatches: boolean
 }
 
 export interface Ranking {
@@ -103,4 +105,5 @@ export interface NewChampionshipRequest {
   nome: string
   tipo: ChampionshipType
   teamIds: number[]
+  allowMultipleMatches?: boolean
 }

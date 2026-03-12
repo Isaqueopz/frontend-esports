@@ -4,7 +4,7 @@ import { ChampionshipType, MatchStatus } from '../types'
 import { MatchStatusBadge } from '../components/MatchStatusBadge'
 import { formatDateTime } from '../utils/dateUtils.js'
 import { championshipsService } from '../services/api'
-import { Users } from 'lucide-react'
+import { Users, MapPin } from 'lucide-react'
 
 export function BracketPage() {
   const [championships, setChampionships] = useState<Championship[]>([])
@@ -43,7 +43,25 @@ export function BracketPage() {
     try {
       const championship = await championshipsService.getById(championshipId)
       if (championship.bracketNodes) {
-        setBracketData(championship.bracketNodes)
+        // Enrich bracket nodes with location/schedule data from tabela
+        const matchMap = new Map(
+          (championship.tabela || []).map(m => [m.id, m])
+        )
+        const enrichedNodes = championship.bracketNodes.map(node => {
+          if (node.match && matchMap.has(node.match.id)) {
+            const tabelaMatch = matchMap.get(node.match.id)!
+            return {
+              ...node,
+              match: {
+                ...node.match,
+                location: node.match.location ?? tabelaMatch.location ?? null,
+                scheduledDate: node.match.scheduledDate ?? tabelaMatch.scheduledDate ?? null,
+              }
+            }
+          }
+          return node
+        })
+        setBracketData(enrichedNodes)
       } else {
         setBracketData([])
       }
@@ -220,6 +238,13 @@ export function BracketPage() {
                         {match.map && (
                           <div className="mt-2 text-xs text-gray-500 text-center">
                             Mapa: {match.map}
+                          </div>
+                        )}
+                        
+                        {match.location && (
+                          <div className="mt-1 text-xs text-gray-500 text-center flex items-center justify-center gap-1">
+                            <MapPin className="w-3 h-3" />
+                            {match.location.name} • {match.location.cidade}
                           </div>
                         )}
                       </div>

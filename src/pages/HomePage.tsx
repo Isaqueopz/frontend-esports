@@ -4,6 +4,7 @@ import type { Championship, Match, Team } from '../types'
 import { ChampionshipType, MatchStatus } from '../types'
 import { MatchCard } from '../components/MatchCard'
 import { championshipsService, matchesService, teamsService } from '../services/api'
+import { ensureArray } from '../hooks/useSafeArrays'
 import bgCsImage from '../assets/bg-cs.jpg'
 import {
   Trophy, Users, Calendar, Eye, ArrowRight, Target, Clock,
@@ -26,11 +27,21 @@ export function HomePage() {
         matchesService.getUpcoming(),
         teamsService.getAll(),
       ])
-      setChampionships(allChampionships.filter((c: Championship) => c.status !== MatchStatus.CONCLUIDA))
-      setUpcomingMatches(upcoming)
-      setTeamsCount((teams as Team[]).length)
+      
+      // Usando ensureArray para garantir arrays válidos
+      const safeChampionships = ensureArray(allChampionships)
+      const safeUpcoming = ensureArray(upcoming)
+      const safeTeams = ensureArray(teams)
+      
+      setChampionships(safeChampionships.filter((c: Championship) => c.status !== MatchStatus.CONCLUIDA))
+      setUpcomingMatches(safeUpcoming)
+      setTeamsCount(safeTeams.length)
     } catch (error) {
       console.error('Erro ao carregar dados:', error)
+      // Em caso de erro, garantir arrays vazios
+      setChampionships([])
+      setUpcomingMatches([])
+      setTeamsCount(0)
     } finally {
       setLoading(false)
     }
@@ -126,7 +137,7 @@ export function HomePage() {
       </section>
 
       {/* Active Championships */}
-      {championships.length > 0 && (
+      {ensureArray(championships).length > 0 && (
         <section>
           <div className="flex items-center space-x-4 mb-8">
             <div className="flex items-center space-x-3">
@@ -136,7 +147,7 @@ export function HomePage() {
             <div className="hidden md:flex items-center space-x-2 ml-auto"><div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div><span className="text-green-400 font-medium">AO VIVO</span></div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {championships.map((championship) => (
+            {ensureArray(championships).map((championship) => (
               <div key={championship.id} className="esports-card">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-2">
@@ -167,9 +178,9 @@ export function HomePage() {
           </div>
           <div className="hidden md:flex items-center space-x-2 ml-auto"><Calendar className="w-5 h-5 text-primary-400" /><span className="text-primary-400 font-medium">AGENDA</span></div>
         </div>
-        {upcomingMatches.length > 0 ? (
+        {ensureArray(upcomingMatches).length > 0 ? (
           <div className="space-y-6">
-            {upcomingMatches.map((match, index) => (
+            {ensureArray(upcomingMatches).map((match, index) => (
               <div key={match.id} className="transform hover:scale-[1.02] transition-all duration-300" style={{ animationDelay: `${index * 100}ms`, animation: 'fadeInUp 0.6s ease-out forwards' }}>
                 <MatchCard match={match} />
               </div>

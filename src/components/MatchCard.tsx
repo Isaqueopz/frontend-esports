@@ -33,7 +33,15 @@ export function MatchCard({ match, onClick, showLocation = true }: MatchCardProp
           <MatchStatusBadge status={match.status} />
           <div className="flex items-center space-x-2 text-sm text-gray-400">
             <Calendar className="w-4 h-4" />
-            <span>{match.scheduledDate ? formatDateTime(match.scheduledDate) : 'A definir'}</span>
+            <span>
+              {match.scheduledDate ? (
+                <span className="font-mono">
+                  {formatDateTime(match.scheduledDate)}
+                </span>
+              ) : (
+                'A definir'
+              )}
+            </span>
           </div>
         </div>
         
@@ -122,18 +130,30 @@ export function MatchCard({ match, onClick, showLocation = true }: MatchCardProp
           </div>
         </div>
         
-        {showLocation && match.location && (
+        {showLocation && (
           <div className="mt-6 pt-4 border-t border-dark-600 group-hover:border-primary-500/30 transition-colors duration-300">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3 text-sm">
-                <div className="w-8 h-8 bg-primary-500/20 rounded-lg flex items-center justify-center">
-                  <MapPin className="w-4 h-4 text-primary-400" />
+              {match.location ? (
+                <div className="flex items-center space-x-3 text-sm">
+                  <div className="w-8 h-8 bg-primary-500/20 rounded-lg flex items-center justify-center">
+                    <MapPin className="w-4 h-4 text-primary-400" />
+                  </div>
+                  <div>
+                    <p className="text-white font-medium">{match.location.name || match.location.nome}</p>
+                    <p className="text-gray-400 text-xs">{match.location.cidade}, {match.location.pais}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-white font-medium">{match.location.name}</p>
-                  <p className="text-gray-400 text-xs">{match.location.cidade}, {match.location.pais}</p>
+              ) : (
+                <div className="flex items-center space-x-3 text-sm">
+                  <div className="w-8 h-8 bg-gray-500/20 rounded-lg flex items-center justify-center">
+                    <MapPin className="w-4 h-4 text-gray-500" />
+                  </div>
+                  <div>
+                    <p className="text-gray-500 font-medium">Local não definido</p>
+                    <p className="text-gray-600 text-xs">Nenhum local selecionado</p>
+                  </div>
                 </div>
-              </div>
+              )}
               
               {isClickable && (
                 <div className="flex items-center space-x-2 text-primary-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300">

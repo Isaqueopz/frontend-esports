@@ -177,7 +177,7 @@ export function ResultsPage() {
                 </div>
               </div>
               
-              <MatchCard match={match} showLocation={false} />
+              <MatchCard match={match} showLocation={true} />
             </div>
           ))
         ) : (

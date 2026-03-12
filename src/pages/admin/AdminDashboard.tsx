@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import type { Match, Team, Championship } from '../../types'
 import { MatchStatus } from '../../types'
 import { matchesService, teamsService, championshipsService } from '../../services/api'
+import { ensureArray } from '../../hooks/useSafeArrays'
 import {
   Users,
   Trophy,
@@ -34,19 +35,26 @@ export function AdminDashboard() {
         matchesService.getAll(),
         matchesService.getUpcoming(),
       ])
-      setTeams(teamsData)
-      setChampionships(championshipsData)
-      setAllMatches(matches)
-      setPendingMatches(upcoming)
+      
+      // Usando ensureArray para maior consistência
+      setTeams(ensureArray(teamsData))
+      setChampionships(ensureArray(championshipsData))
+      setAllMatches(ensureArray(matches))
+      setPendingMatches(ensureArray(upcoming))
     } catch (error) {
       console.error('Erro ao carregar dados admin:', error)
+      // Em caso de erro, garantir arrays vazios
+      setTeams([])
+      setChampionships([])
+      setAllMatches([])
+      setPendingMatches([])
     } finally {
       setLoading(false)
     }
   }
 
-  const activeChampionships = championships.filter(c => c.status === MatchStatus.EM_ANDAMENTO).length
-  const completedMatches = allMatches.filter(m => m.status === MatchStatus.CONCLUIDA).length
+  const activeChampionships = ensureArray(championships).filter(c => c.status === MatchStatus.EM_ANDAMENTO).length
+  const completedMatches = ensureArray(allMatches).filter(m => m.status === MatchStatus.CONCLUIDA).length
 
   const quickActions = [
     {
@@ -105,7 +113,7 @@ export function AdminDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-400 text-sm">Total de Times</p>
-              <p className="text-2xl font-bold text-white">{teams.length}</p>
+              <p className="text-2xl font-bold text-white">{ensureArray(teams).length}</p>
             </div>
             <Users className="w-8 h-8 text-blue-500" />
           </div>
@@ -125,7 +133,7 @@ export function AdminDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-400 text-sm">Total de Partidas</p>
-              <p className="text-2xl font-bold text-white">{allMatches.length}</p>
+              <p className="text-2xl font-bold text-white">{ensureArray(allMatches).length}</p>
             </div>
             <Gamepad2 className="w-8 h-8 text-purple-500" />
           </div>
@@ -135,7 +143,7 @@ export function AdminDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-400 text-sm">Partidas Pendentes</p>
-              <p className="text-2xl font-bold text-white">{pendingMatches.length}</p>
+              <p className="text-2xl font-bold text-white">{ensureArray(pendingMatches).length}</p>
             </div>
             <Clock className="w-8 h-8 text-orange-500" />
           </div>
@@ -191,9 +199,9 @@ export function AdminDashboard() {
         </div>
 
         <div className="p-6">
-          {pendingMatches.length > 0 ? (
+          {ensureArray(pendingMatches).length > 0 ? (
             <div className="space-y-4">
-              {pendingMatches.slice(0, 5).map((match) => (
+              {ensureArray(pendingMatches).slice(0, 5).map((match) => (
                 <div key={match.id} className="flex items-center justify-between p-4 bg-dark-700 rounded-lg">
                   <div className="flex items-center space-x-4">
                     <div className="text-center">
@@ -202,7 +210,7 @@ export function AdminDashboard() {
                       <p className="font-medium text-white">{match.teamB?.name ?? 'A definir'}</p>
                     </div>
                     <div className="text-gray-400">
-                      {match.location && <p className="text-sm">{match.location.name}</p>}
+                      {match.location && <p className="text-sm">{match.location.name || match.location.nome}</p>}
                       <p className="text-xs">
                         {match.scheduledDate ? new Date(match.scheduledDate).toLocaleDateString('pt-BR') : 'A definir'}
                       </p>
