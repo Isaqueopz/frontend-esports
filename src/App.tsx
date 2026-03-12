@@ -4,6 +4,7 @@ import { AdminLayout } from './components/AdminLayout'
 import { HomePage } from './pages/HomePage'
 import { RankingPage } from './pages/RankingPage'
 import { BracketPage } from './pages/BracketPage'
+import { LeaguePage } from './pages/LeaguePage'
 import { ResultsPage } from './pages/ResultsPage'
 import { TeamProfilePage } from './pages/TeamProfilePage'
 import { TeamsPage } from './pages/TeamsPage'
@@ -40,6 +41,7 @@ function App() {
         <Route path="/" element={<PublicPage page={<HomePage />} />} />
         <Route path="/ranking" element={<PublicPage page={<RankingPage />} />} />
         <Route path="/bracket" element={<PublicPage page={<BracketPage />} />} />
+        <Route path="/league" element={<PublicPage page={<LeaguePage />} />} />
         <Route path="/results" element={<PublicPage page={<ResultsPage />} />} />
         <Route path="/teams" element={<PublicPage page={<TeamsPage />} />} />
         <Route path="/teams/:teamId" element={<PublicPage page={<TeamProfilePage />} />} />

@@ -7,7 +7,8 @@ import {
   BarChart3, 
   Users,
   Zap,
-  Shield
+  Shield,
+  ListOrdered
 } from 'lucide-react'
 
 interface LayoutProps {
@@ -18,6 +19,7 @@ const navItems = [
   { path: '/', label: 'Home', icon: Home },
   { path: '/ranking', label: 'Ranking', icon: Trophy },
   { path: '/bracket', label: 'Bracket', icon: Brackets },
+  { path: '/league', label: 'Liga', icon: ListOrdered },
   { path: '/results', label: 'Resultados', icon: BarChart3 },
   { path: '/teams', label: 'Times', icon: Users }
 ]
