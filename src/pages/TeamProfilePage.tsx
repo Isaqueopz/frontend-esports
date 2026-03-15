@@ -67,10 +67,10 @@ export function TeamProfilePage() {
         <div className="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-6">
           {/* Team Logo */}
           <div className="flex-shrink-0">
-            {team.logo ? (
+              {team.logo ? (
               <img
-                src={team.logo}
-                alt={team.name}
+                  src={team.logo}
+                  alt={team.name}
                 className="w-24 h-24 rounded-full object-cover border-4 border-primary-500 shadow-glow-blue"
               />
             ) : (
@@ -82,19 +82,19 @@ export function TeamProfilePage() {
           
           {/* Team Info */}
           <div className="flex-1 text-center md:text-left">
-            <h1 className="text-3xl font-bold text-white mb-2">{team.name}</h1>
+              <h1 className="text-3xl font-bold text-white mb-2">{team.name}</h1>
             <p className="text-gray-400 mb-4">
-              {team.players.length} jogadores
+                {team.players.length} jogadores
             </p>
             
             {/* Quick Stats */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-center">
               <div>
-                <div className="text-2xl font-bold text-primary-400">#{team.ranking}</div>
+                <div className="text-2xl font-bold text-primary-400">#{team.rankingTeam}</div>
                 <div className="text-sm text-gray-400">Ranking</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-yellow-400">{team.pontos}</div>
+                <div className="text-2xl font-bold text-yellow-400">{team.pontosTeam}</div>
                 <div className="text-sm text-gray-400">Pontos</div>
               </div>
               <div>
@@ -107,7 +107,7 @@ export function TeamProfilePage() {
       </div>
 
       {/* Team Roster */}
-      {team.players.length > 0 && (
+        {team.players.length > 0 && (
         <div className="esports-card">
           <h2 className="text-xl font-bold text-white mb-4 flex items-center">
             <div className="w-8 h-8 bg-primary-500/20 rounded-lg flex items-center justify-center mr-3">
@@ -117,7 +117,7 @@ export function TeamProfilePage() {
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {team.players.map((player) => (
+              {team.players.map((player) => (
               <div key={player.id} className="bg-dark-700 rounded-lg p-4 hover:bg-dark-600 transition-colors">
                 <div className="flex items-center space-x-3">
                   {player.avatar ? (

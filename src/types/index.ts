@@ -25,9 +25,10 @@ export interface Team {
   id: number
   name: string
   logo?: string | null
-  ranking: number
-  pontos: number
+  rankingTeam: number
+  pontosTeam: number
   players: Player[]
+  colocacao?: number | null
 }
 
 export interface Location {
@@ -76,6 +77,7 @@ export interface Ranking {
   posicao: number
 }
 
+
 export interface BracketNode {
   id: number
   match?: Match | null
@@ -83,6 +85,14 @@ export interface BracketNode {
   vencedor?: Team | null
   rodada: number
   posicao: number
+}
+
+// Novo tipo para ranking conforme backend
+export interface TeamRankingDTO {
+  teamName: string
+  rank: number
+  totalPoints: number
+  pointsByChampionship: Record<string, number>
 }
 
 export interface ScoreUpdateRequest {

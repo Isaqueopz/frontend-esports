@@ -7,14 +7,10 @@ import { matchesService, teamsService, championshipsService, locationsService } 
 import {
   ArrowLeft,
   Save,
-  Trophy,
   Users,
   Calendar,
-  MapPin,
   Target,
   Swords,
-  CheckCircle2,
-  AlertCircle
 } from 'lucide-react'
 
 export function AdminMatchEdit() {
@@ -183,7 +179,7 @@ export function AdminMatchEdit() {
                 <option value="">Selecione o Time A</option>
                 {teams.map(team => (
                   <option key={team.id} value={team.id} disabled={team.id === teamBId}>
-                    {team.name} (Rank #{team.ranking})
+                    {team.name} (Rank #{team.rankingTeam})
                   </option>
                 ))}
               </select>
@@ -202,7 +198,7 @@ export function AdminMatchEdit() {
                 <option value="">Selecione o Time B</option>
                 {teams.map(team => (
                   <option key={team.id} value={team.id} disabled={team.id === teamAId}>
-                    {team.name} (Rank #{team.ranking})
+                    {team.name} (Rank #{team.rankingTeam})
                   </option>
                 ))}
               </select>

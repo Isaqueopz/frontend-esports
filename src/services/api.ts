@@ -1,3 +1,10 @@
+// Serviços para ranking
+import type { TeamRankingDTO } from '../types'
+
+export const rankingService = {
+  getGeral: () => apiCall<TeamRankingDTO[]>('/ranking/geral'),
+  getByChampionship: (nome: string) => apiCall<TeamRankingDTO[]>(`/ranking/campeonato?nome=${encodeURIComponent(nome)}`),
+}
 import type { Team, Match, Championship, ScoreUpdateRequest, NewMatchRequest, NewChampionshipRequest, Location } from '../types'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
@@ -88,6 +95,7 @@ export const championshipsService = {
   getAll: () => apiCall<Championship[]>('/championships'),
   getById: (id: number) => apiCall<Championship>(`/championships/${id}`),
   getTabela: (id: number) => apiCall<Team[]>(`/championships/${id}/tabela`),
+  getTabelaGeral: () => apiCall<Team[]>('/championships/ranking-geral'),
   create: (data: NewChampionshipRequest) =>
     apiCall<Championship>('/championships', { method: 'POST', body: JSON.stringify(data) }),
   delete: (id: number) => apiCall<void>(`/championships/${id}`, { method: 'DELETE' }),

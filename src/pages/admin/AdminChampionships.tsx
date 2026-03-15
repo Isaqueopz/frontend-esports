@@ -827,7 +827,7 @@ export function AdminChampionships() {
                         />
                         <span className="text-white text-sm">{team.name}</span>
                       </div>
-                      <span className="text-gray-400 text-xs">Rank #{team.ranking}</span>
+                      <span className="text-gray-400 text-xs">Rank #{team.rankingTeam}</span>
                     </label>
                   ))}
                 </div>

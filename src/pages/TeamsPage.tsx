@@ -87,10 +87,10 @@ export function TeamsPage() {
                   </h3>
                   <p className="text-sm text-gray-400">{team.players.length} jogadores</p>
                   <div className="flex items-center space-x-3 mt-1">
-                    <span className="text-sm text-primary-400 font-medium">#{team.ranking}</span>
+                    <span className="text-sm text-primary-400 font-medium">#{team.rankingTeam}</span>
                     <span className="flex items-center text-sm text-yellow-400">
                       <Trophy className="w-3 h-3 mr-1" />
-                      {team.pontos} pts
+                      {team.pontosTeam} pts
                     </span>
                   </div>
                 </div>

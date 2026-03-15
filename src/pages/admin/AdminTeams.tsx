@@ -228,12 +228,12 @@ export function AdminTeams() {
                     {team.logo ? (
                       <img src={team.logo} alt={team.name} className="w-12 h-12 rounded-full object-cover" />
                     ) : (
-                      team.name.charAt(0).toUpperCase()
+                      team.name ? team.name.charAt(0).toUpperCase() : "?"
                     )}
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-white">{team.name}</h3>
-                    <p className="text-gray-400 text-sm">Rank #{team.ranking}</p>
+                    <p className="text-gray-400 text-sm">Rank #{team.rankingTeam}</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -257,15 +257,15 @@ export function AdminTeams() {
               <div className="flex items-center space-x-4 mb-4">
                 <div className="flex items-center space-x-1 text-yellow-500">
                   <Trophy className="w-4 h-4" />
-                  <span className="text-sm font-semibold">{team.pontos} pts</span>
+                  <span className="text-sm font-semibold">{team.pontosTeam} pts</span>
                 </div>
                 <div className="flex items-center space-x-1 text-gray-400">
                   <Users className="w-4 h-4" />
-                  <span className="text-sm">{team.players.length} jogadores</span>
+                  <span className="text-sm">{team.players ? team.players.length : 0} jogadores</span>
                 </div>
               </div>
 
-              {team.players.length > 0 && (
+              {team.players && team.players.length > 0 && (
                 <div className="space-y-1">
                   <p className="text-xs text-gray-500 uppercase tracking-wider">Jogadores</p>
                   <div className="flex flex-wrap gap-1">
