@@ -89,10 +89,11 @@ export interface BracketNode {
 
 // Novo tipo para ranking conforme backend
 export interface TeamRankingDTO {
-  teamName: string
-  rank: number
-  totalPoints: number
-  pointsByChampionship: Record<string, number>
+  teamId: number;
+  teamName: string;
+  position: number;
+  totalPoints: number;
+  championshipPoints: Record<string, number>;
 }
 
 export interface ScoreUpdateRequest {

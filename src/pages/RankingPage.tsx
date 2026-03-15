@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react'
-import type { Championship, Team } from '../types'
-import { championshipsService } from '../services/api'
+import type { Championship, Team, TeamRankingDTO } from '../types'
+import { championshipsService, rankingService } from '../services/api'
 import { Globe, Trophy } from 'lucide-react'
 
 
@@ -13,10 +13,12 @@ export function RankingPage() {
 
 
   const [tab, setTab] = useState<Tab>('geral')
-  const [allRankings, setAllRankings] = useState<Team[]>([])
+  const [allRankings, setAllRankings] = useState<TeamRankingDTO[]>([])
   const [championshipRankings, setChampionshipRankings] = useState<Team[]>([])
   const [championships, setChampionships] = useState<Championship[]>([])
   const [selectedChampionship, setSelectedChampionship] = useState<number | null>(null)
+  // Estado para armazenar o id do campeonato selecionado para exibição dinâmica
+  const [selectedCampId, setSelectedCampId] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
 
 
@@ -25,13 +27,15 @@ export function RankingPage() {
       try {
         setLoading(true)
         const [rankings, allChampionships] = await Promise.all([
-          championshipsService.getTabelaGeral(),
+          rankingService.getGeral(),
           championshipsService.getAll(),
         ])
+        console.log('[DEBUG] allRankings:', rankings);
         setAllRankings(rankings)
         setChampionships(allChampionships)
         if (allChampionships.length > 0 && !selectedChampionship) {
           setSelectedChampionship(allChampionships[0].id)
+          setSelectedCampId(allChampionships[0].id)
         }
       } catch (error) {
         console.error('Erro ao carregar dados:', error)
@@ -49,6 +53,7 @@ export function RankingPage() {
         try {
           setLoading(true)
           const rankings = await championshipsService.getTabela(selectedChampionship)
+          console.log('[DEBUG] championshipRankings:', rankings);
           setChampionshipRankings(rankings)
         } catch (error) {
           setChampionshipRankings([])
@@ -134,49 +139,60 @@ export function RankingPage() {
         <>
           {allRankings.length > 0 ? (
             <div className="space-y-3">
-              {allRankings.map((team, index) => {
-                const position = index + 1
+              {allRankings.map((team, idx) => {
+                const position: number = typeof team.position === 'number' ? team.position : idx + 1;
+                // Badge neutro para ranking
+                // Badge: quanto maior o rank, mais destacado
+                // Exemplo: rank 1 = cinza, rank 2 = azul claro, rank 3 = azul médio, rank 4+ = azul escuro
+                const badgeColorsByRank = [
+                  'bg-gray-600 text-gray-200', // 1
+                  'bg-blue-300 text-blue-900', // 2
+                  'bg-blue-500 text-white',    // 3
+                  'bg-blue-700 text-white',    // 4
+                  'bg-blue-900 text-white',    // 5+
+                ];
+                const badgeColor = badgeColorsByRank[
+                  position <= 5 ? position - 1 : 4
+                ];
                 return (
                   <div
-                    key={team.id}
-                    className={`group esports-card flex items-center gap-4 py-4 hover:border-primary-500/50 transition-all duration-300 ${
-                      position <= 3 ? 'border-l-4' : ''
-                    } ${
-                      position === 1 ? 'border-l-yellow-500' :
-                      position === 2 ? 'border-l-gray-400' :
-                      position === 3 ? 'border-l-yellow-600' : ''
-                    }`}
+                    key={team.teamName}
+                    className={
+                      'group esports-card flex items-center gap-4 py-4 hover:border-primary-500/50 transition-all duration-300'
+                    }
                   >
-                    {/* Position */}
-                    <div className="flex-shrink-0">
-                      {getPositionBadge(position)}
-                    </div>
                     {/* Team Info */}
                     <div className="flex-1 min-w-0">
                       <h3 className="font-bold text-white text-lg group-hover:text-primary-300 transition-colors duration-300 truncate">
-                        {team.name}
+                        {team.teamName}
                       </h3>
                     </div>
-                    {/* Points */}
-                    <div className="flex-shrink-0 text-right">
-                      <div className="text-2xl font-black text-primary-400">{team.pontosTeam}</div>
-                      <div className="text-xs text-gray-500">pontos</div>
+                    {/* Total Points com layout centralizado e label */}
+                    <div className="flex flex-col items-center mr-4">
+                      <span className="text-xs text-gray-400 mb-1 tracking-wider uppercase">PONTOS ATUAIS</span>
+                      <span className="text-2xl font-black text-primary-400 text-center">{team.totalPoints}</span>
                     </div>
-                    {/* Ranking Badge */}
-                    <div className="flex-shrink-0 hidden md:block">
-                      <div className={`px-4 py-2 rounded-lg text-center ${
-                        position <= 3
-                          ? 'bg-primary-500/20 border border-primary-500/30'
-                          : 'bg-dark-700'
-                      }`}>
-                        <div className="text-xs text-gray-400">Rank</div>
-                        <div className={`text-lg font-bold ${
-                          position <= 3 ? 'text-primary-400' : 'text-gray-300'
-                        }`}>#{team.rankingTeam}</div>
+                    {/* Championship Points */}
+                    <div className="flex flex-row gap-2">
+                      {Object.entries(team.championshipPoints || {}).map(([champName, points]) => (
+                        <span
+                          key={champName}
+                          className="bg-dark-700 text-primary-300 px-3 py-1 rounded-lg text-xs font-semibold border border-primary-700/30"
+                          title={champName}
+                        >
+                          {champName}: <span className="font-bold">{points}</span>
+                        </span>
+                      ))}
+                    </div>
+                    {/* Ranking Badge na direita com label */}
+                    <div className="flex flex-col items-center flex-shrink-0 ml-4">
+                      <span className="text-xs text-gray-400 mb-1 tracking-wider uppercase">RANKING GERAL</span>
+                      <div className={`flex items-center justify-center w-12 h-12 rounded-full font-bold text-lg shadow-lg ${badgeColor}`}>
+                        <span>{position}</span>
                       </div>
                     </div>
                   </div>
-                )
+                );
               })}
             </div>
           ) : (
@@ -196,7 +212,11 @@ export function RankingPage() {
             <div className="flex flex-col md:flex-row md:items-center gap-4">
               <select
                 value={selectedChampionship ?? ''}
-                onChange={(e) => setSelectedChampionship(Number(e.target.value))}
+                onChange={(e) => {
+                  const campId = Number(e.target.value);
+                  setSelectedChampionship(campId);
+                  setSelectedCampId(campId);
+                }}
                 className="bg-dark-700 border border-dark-600 text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
                 {championships.map((championship) => (
@@ -232,53 +252,70 @@ export function RankingPage() {
             </div>
           )}
 
-          {/* Ranking Table */}
-          {championshipRankings.length > 0 ? (
+          {/* Ranking Cards por Campeonato */}
+          {championshipRankings.length > 0 && allRankings.length > 0 ? (
             <div className="space-y-3">
-              {championshipRankings.map((team, index) => {
-                const position = index + 1
+              {championshipRankings.map((team, idx) => {
+                // Busca o ranking geral do time
+                // Busca pelo id do time, que agora está disponível
+                const geral = allRankings.find(t => Number(t.teamId) === Number(team.id));
+                // Ranking geral (posição) desse time
+                // Se não houver ranking, exibe '-'
+                const geralRank: string | number = typeof geral?.position === 'number' ? geral.position : '-';
+                // Pontos do time nesse campeonato pelo id
+                let champPoints = 0;
+                const campId = selectedCampId ?? selected?.id;
+                const champIdStr = campId !== undefined && campId !== null ? String(campId) : undefined;
+                // Label dinâmico para pontos
+                const pontosLabel = selected?.tipo === 'MATA_MATA' ? 'PONTOS NO MATA-MATA' : 'PONTOS ATUAIS';
+                if (
+                  geral &&
+                  geral.championshipPoints &&
+                  champIdStr
+                ) {
+                  if (Object.prototype.hasOwnProperty.call(geral.championshipPoints, champIdStr)) {
+                    champPoints = geral.championshipPoints[champIdStr] ?? 0;
+                  }
+                }
+                // Badge: quanto maior o rank, mais destacado
+                const badgeColorsByRank = [
+                  'bg-gray-600 text-gray-200', // 1
+                  'bg-blue-300 text-blue-900', // 2
+                  'bg-blue-500 text-white',    // 3
+                  'bg-blue-700 text-white',    // 4
+                  'bg-blue-900 text-white',    // 5+
+                ];
+                const badgeColor = badgeColorsByRank[
+                  typeof geralRank === 'number' && geralRank > 0 && geralRank <= 5 ? geralRank - 1 : 4
+                ];
                 return (
-                    <div
-                      key={team.id}
-                      className={`group esports-card flex items-center gap-4 py-4 hover:border-primary-500/50 transition-all duration-300 ${
-                        position <= 3 ? 'border-l-4' : ''
-                      } ${
-                        position === 1 ? 'border-l-yellow-500' :
-                        position === 2 ? 'border-l-gray-400' :
-                        position === 3 ? 'border-l-yellow-600' : ''
-                      }`}
-                    >
-                      {/* Position */}
-                      <div className="flex-shrink-0">
-                        {getPositionBadge(position)}
-                      </div>
-                      {/* Team Info */}
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-white text-lg group-hover:text-primary-300 transition-colors duration-300 truncate">
-                          {team.name}
-                        </h3>
-                      </div>
-                      {/* Points */}
-                      <div className="flex-shrink-0 text-right">
-                        <div className="text-2xl font-black text-primary-400">{team.pontosTeam}</div>
-                        <div className="text-xs text-gray-500">pontos</div>
-                      </div>
-                      {/* Ranking Badge */}
-                      <div className="flex-shrink-0 hidden md:block">
-                        <div className={`px-4 py-2 rounded-lg text-center ${
-                          position <= 3
-                            ? 'bg-primary-500/20 border border-primary-500/30'
-                            : 'bg-dark-700'
-                        }`}>
-                          <div className="text-xs text-gray-400">Rank</div>
-                          <div className={`text-lg font-bold ${
-                            position <= 3 ? 'text-primary-400' : 'text-gray-300'
-                          }`}>#{team.rankingTeam ?? position}</div>
-                        </div>
+                  <div
+                    key={team.id}
+                    className={
+                      'group esports-card flex items-center gap-4 py-4 hover:border-primary-500/50 transition-all duration-300'
+                    }
+                  >
+                    {/* Team Info */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-white text-lg group-hover:text-primary-300 transition-colors duration-300 truncate">
+                        {team.name}
+                      </h3>
+                    </div>
+                    {/* Pontos do time neste campeonato com label dinâmico */}
+                    <div className="flex flex-col items-center mr-4">
+                      <span className="text-xs text-gray-400 mb-1 tracking-wider uppercase">{pontosLabel}</span>
+                      <span className="text-2xl font-black text-primary-400 text-center">{champPoints}</span>
+                    </div>
+                    {/* Ranking Geral Badge na direita com label */}
+                    <div className="flex flex-col items-center flex-shrink-0 ml-4">
+                      <span className="text-xs text-gray-400 mb-1 tracking-wider uppercase">RANKING GERAL</span>
+                      <div className={`flex items-center justify-center w-12 h-12 rounded-full font-bold text-lg shadow-lg ${badgeColor}`}>
+                        <span>{geralRank}</span>
                       </div>
                     </div>
-                  )
-                })}
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <div className="esports-card text-center py-12">
