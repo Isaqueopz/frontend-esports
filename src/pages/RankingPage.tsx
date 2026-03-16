@@ -208,7 +208,7 @@ export function RankingPage() {
       {tab === 'campeonato' && (
         <>
           {/* Championship Selector */}
-          {championships.length > 0 && (
+          {championships.filter(c => c.tipo === 'PONTOS_CORRIDOS').length > 0 && (
             <div className="flex flex-col md:flex-row md:items-center gap-4">
               <select
                 value={selectedChampionship ?? ''}
@@ -219,11 +219,13 @@ export function RankingPage() {
                 }}
                 className="bg-dark-700 border border-dark-600 text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
-                {championships.map((championship) => (
-                  <option key={championship.id} value={championship.id}>
-                    {championship.nome} ({championship.tipo === 'PONTOS_CORRIDOS' ? 'Pontos Corridos' : 'Mata-Mata'})
-                  </option>
-                ))}
+                {championships
+                  .filter((championship) => championship.tipo === 'PONTOS_CORRIDOS')
+                  .map((championship) => (
+                    <option key={championship.id} value={championship.id}>
+                      {championship.nome} (Pontos Corridos)
+                    </option>
+                  ))}
               </select>
             </div>
           )}
